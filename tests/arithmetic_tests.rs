@@ -1,5 +1,5 @@
 use complex::*;
-    
+
 #[test]
 fn test_add_two_complex() {
     let z1 = Complex::<f64>::new(1., 2.);
@@ -65,8 +65,8 @@ fn test_neg_complex() {
 
 // #[test]
 // fn test_exp_complex() {
-    // let z1 = Complex::<f64>::new(0., 1.);
-    // assert_eq!(z1.exp(), Complex::<f64>::new(1_f64.cos(), 1_f64.sin()));
+// let z1 = Complex::<f64>::new(0., 1.);
+// assert_eq!(z1.exp(), Complex::<f64>::new(1_f64.cos(), 1_f64.sin()));
 // }
 
 #[test]
@@ -141,8 +141,8 @@ fn test_neg_quaternion() {
 
 // #[test]
 // fn test_exp_quaternion() {
-    // let z1 = Complex::<f64>::new(0., 1.);
-    // assert_eq!(z1.exp(), Complex::<f64>::new(1_f64.cos(), 1_f64.sin()));
+// let z1 = Complex::<f64>::new(0., 1.);
+// assert_eq!(z1.exp(), Complex::<f64>::new(1_f64.cos(), 1_f64.sin()));
 // }
 
 #[test]
@@ -164,36 +164,37 @@ fn test_sub_two_octonion_f64() {
     let z1 = complex![1., 2., 3., 4., 1., 2., 3., 4.];
     let z2 = complex![2., 3., 4., 5., 1., 2., 3., 4.];
     assert_eq!(
-        z1 - z2, complex![-1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 0.0]
+        z1 - z2,
+        complex![-1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 0.0]
     );
-    assert_eq!(
-        z2 - z1, complex![1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]
-    );
+    assert_eq!(z2 - z1, complex![1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]);
 }
 
 #[test]
 fn test_sub_octonion_and_f64() {
     let z1 = complex![1., 2., 3., 4., 1., 2., 3., 4.];
+    assert_eq!(z1 - 3.0_f64, complex![-2., 2., 3., 4., 1., 2., 3., 4.]);
     assert_eq!(
-        z1 - 3.0_f64, complex![-2., 2., 3., 4., 1., 2., 3., 4.]
-    );
-    assert_eq!(
-        3.0_f64 - z1, complex![2., -2., -3., -4., -1., -2., -3., -4.]
+        3.0_f64 - z1,
+        complex![2., -2., -3., -4., -1., -2., -3., -4.]
     );
 }
 
 #[test]
 fn test_mul_two_octonion() {
-    let z1 = complex![1., 0., 2., 3., 0., 0., 0., 0.];
-    let z2 = complex![1., 0., -2., -3.,  0., 0., 0., 0.];
-    assert_eq!(z1 * z2, complex!(14., 0., 0., 0., 0., 0., 0., 0.));
+    let z1 = complex![1., 0., 2., 3., 2., 0., 1., 3.];
+    let z2 = complex![1., 0., -2., -3., -2., 0., -1., -3.];
+    assert_eq!(z1 * z2, complex!(28., 0., 0., 0., 0., 0., 0., 0.));
 }
 
 #[test]
 fn test_commutator_two_octonion() {
     let z1 = complex![1., -1., 1., 1., 0., 0., 0., 0.];
     let z2 = complex![1., 1., 1., -1., 0., 0., 0., 0.];
-    assert_eq!(z1 * z2 - z2 * z1, complex!(0., -4., 0., -4., 0., 0., 0., 0.));
+    assert_eq!(
+        z1 * z2 - z2 * z1,
+        complex!(0., -4., 0., -4., 0., 0., 0., 0.)
+    );
 }
 
 #[test]
@@ -201,9 +202,10 @@ fn test_associator_two_octonion() {
     let z1 = complex![1., -1., 1., 1., 0., 1., 0., 0.];
     let z2 = complex![1., 1., 1., -1., 0., 0., 0., 1.];
     let z3 = complex![1., 1., -1., 1., 0., 0., 1., 0.];
-    assert_ne!((z1 * z2) * z3 - z1 * (z2 * z3), 
-               complex!(0., 0., 0., 0., 0., 0., 0., 0.),
-               "General associator for octonions is non-zero."
+    assert_ne!(
+        (z1 * z2) * z3 - z1 * (z2 * z3),
+        complex!(0., 0., 0., 0., 0., 0., 0., 0.),
+        "General associator for octonions is non-zero."
     );
 }
 
@@ -225,12 +227,12 @@ fn test_div_two_octonion() {
 fn test_div_octonion_and_f64() {
     let z1 = complex![1., 1., 1., 1., 1., 1., 1., 1.];
     assert_eq!(
-        z1 / 2.0_f64, complex!(0.5, 0.5, 0.5, 0.5, 
-                               0.5, 0.5, 0.5, 0.5)
+        z1 / 2.0_f64,
+        complex!(0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
     );
     assert_eq!(
-        2.0_f64 / z1, complex!(0.25, -0.25, -0.25, -0.25,
-                               -0.25, -0.25, -0.25, -0.25)
+        2.0_f64 / z1,
+        complex!(0.25, -0.25, -0.25, -0.25, -0.25, -0.25, -0.25, -0.25)
     );
 }
 
@@ -242,6 +244,6 @@ fn test_neg_octonion() {
 
 // #[test]
 // fn test_exp_quaternion() {
-    // let z1 = Complex::<f64>::new(0., 1.);
-    // assert_eq!(z1.exp(), Complex::<f64>::new(1_f64.cos(), 1_f64.sin()));
+// let z1 = Complex::<f64>::new(0., 1.);
+// assert_eq!(z1.exp(), Complex::<f64>::new(1_f64.cos(), 1_f64.sin()));
 // }
