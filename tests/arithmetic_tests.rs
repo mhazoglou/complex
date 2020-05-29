@@ -63,11 +63,11 @@ fn test_neg_complex() {
     assert_eq!(-z1, Complex::<f64>::new(-1., 2.));
 }
 
-// #[test]
-// fn test_exp_complex() {
-// let z1 = Complex::<f64>::new(0., 1.);
-// assert_eq!(z1.exp(), Complex::<f64>::new(1_f64.cos(), 1_f64.sin()));
-// }
+#[test]
+fn test_exp_complex() {
+    let z1 = Complex::<f64>::new(0., 1.);
+    assert_eq!(z1.exp(), Complex::<f64>::new(1_f64.cos(), 1_f64.sin()));
+}
 
 #[test]
 fn test_add_two_quaternions() {

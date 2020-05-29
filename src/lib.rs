@@ -1,7 +1,8 @@
 use std::any::type_name;
 use std::num::ParseFloatError;
 use std::str::FromStr;
-use std::{fmt, ops};
+use std::fmt;
+use std::ops::{Add, Sub, Mul, Div, Neg};
 
 fn type_of<T>(_: &T) -> &'static str {
     type_name::<T>()
@@ -14,7 +15,7 @@ macro_rules! complex{
             Complex::new($x, $y)
         }
     };
-    ( $( $x:expr, $y:expr),* ) => {
+    ( $( $x:expr, $y:expr),+ ) => {
         {
             complex![
                 $(
@@ -34,14 +35,54 @@ pub struct Complex<T> {
 impl<T> Complex<T>
 where
     T: Conjugate
+        + AbsSq
+        + Real
         + Copy
-        + ops::Add<Output = T>
-        + ops::Sub<Output = T>
-        + ops::Mul<Output = T>
-        + ops::Neg<Output = T>,
+        + Add<Output = T>
+        + Add<f64, Output = T>
+        + Sub<Output = T>
+        + Sub<f64, Output = T>
+        + Mul<Output = T>
+        + Mul<f64, Output = T>
+        + Div<Output = T>
+        + Div<f64, Output = T>
+        + Neg<Output = T>,
 {
     pub fn new(re: T, im: T) -> Self {
         Self { re, im }
+    }
+
+    pub fn exp(&self) -> Self {
+        let real = self.real();
+        let imag = *self - real;
+        let theta = imag.abs_sq().sqrt();
+        let unit_imag: Self;
+
+        if theta == 0. {
+            unit_imag = imag * 0.;
+        } else {
+            unit_imag = imag / theta;
+        }
+
+        real.exp() * (theta.cos() + unit_imag * theta.sin())
+    }
+
+    pub fn polar_rep(&self) -> (f64, Self) {
+        let r = self.abs_sq().sqrt();
+        let normed = *self / r;
+        let real = normed.real();
+        let imag = normed - real;
+        let theta = real.acos();
+        let sin_theta = theta.sin();
+        let imag_exp: Self;
+
+        if sin_theta == 0. {
+            imag_exp = 0. * imag;
+        } else {
+            imag_exp = theta * imag / sin_theta;
+        }
+
+        (r, imag_exp)
     }
 }
 
@@ -57,7 +98,7 @@ impl Conjugate for f64 {
 
 impl<T> Conjugate for Complex<T>
 where
-    T: Conjugate + Copy + ops::Neg<Output = T>,
+    T: Conjugate + Copy + Neg<Output = T>,
 {
     fn conj(&self) -> Self {
         Self {
@@ -79,16 +120,49 @@ impl AbsSq for f64 {
 
 impl<T> AbsSq for Complex<T>
 where
-    T: AbsSq + Conjugate + Copy + ops::Add<Output = T>,
+    T: AbsSq + Conjugate + Copy + Add<Output = T>,
 {
     fn abs_sq(&self) -> f64 {
         self.re.abs_sq() + self.im.abs_sq()
     }
 }
 
-impl<T> ops::Neg for Complex<T>
+pub trait Real {
+    fn real(&self) -> f64;
+}
+
+impl Real for f64 {
+    fn real(&self) -> f64 {
+        *self
+    }
+}
+
+impl<T> Real for Complex<T>
 where
-    T: ops::Neg<Output = T>,
+    T: Real + Copy,
+{
+    fn real(&self) -> f64 {
+        self.re.real()
+    }
+}
+
+macro_rules! forward_ref_un_op {
+    ($imp:ident, $method:ident, $t:ty, $T:tt) => {
+        impl<$T> $imp for &$t 
+        where $T: Neg<Output = $T> + Copy, 
+        {
+            type Output = $t;
+            fn $method(self) -> Self::Output {
+                $imp::$method(*self)
+            } 
+        
+        }
+    }
+}
+
+forward_ref_un_op!(Neg, neg, Complex<T>, T);
+impl<T> Neg for Complex<T>
+where T: Neg<Output = T>,
 {
     type Output = Complex<T>;
     fn neg(self) -> Self {
@@ -99,9 +173,80 @@ where
     }
 }
 
-impl<T> ops::Add for Complex<T>
+macro_rules! forward_ref_bin_op {
+    ($imp:ident, $method:ident, $t:ty, $u:ty, $T:tt) => {
+        impl<$T> $imp<&$u> for $t
+        where
+            $T: Conjugate
+                + AbsSq
+                + Real
+                + Copy
+                + Add<Output = $T>
+                + Add<f64, Output = $T>
+                + Sub<Output = $T>
+                + Sub<f64, Output = $T>
+                + Mul<Output = $T>
+                + Mul<f64, Output = $T>
+                + Div<Output = $T>
+                + Div<f64, Output = $T>
+                + Neg<Output = $T> + Copy,
+        {
+            type Output = <$t as $imp<$u>>::Output;
+            fn $method(self, other: &$u) -> Self::Output {
+                $imp::$method(self, *other)
+            }
+        }
+
+        impl<$T> $imp<$u> for &$t
+        where
+            $T: Conjugate
+                + AbsSq
+                + Real
+                + Copy
+                + Add<Output = $T>
+                + Add<f64, Output = $T>
+                + Sub<Output = $T>
+                + Sub<f64, Output = $T>
+                + Mul<Output = $T>
+                + Mul<f64, Output = $T>
+                + Div<Output = $T>
+                + Div<f64, Output = $T>
+                + Neg<Output = $T> + Copy,
+        {
+            type Output = <$t as $imp<$u>>::Output;
+            fn $method(self, other: $u) -> Self::Output {
+                $imp::$method(*self, other)
+            }
+        }
+
+        impl<'a, 'b, $T> $imp<&'b $u> for &'a $t
+        where
+            $T: Conjugate
+                + AbsSq
+                + Real
+                + Copy
+                + Add<Output = $T>
+                + Add<f64, Output = $T>
+                + Sub<Output = $T>
+                + Sub<f64, Output = $T>
+                + Mul<Output = $T>
+                + Mul<f64, Output = $T>
+                + Div<Output = $T>
+                + Div<f64, Output = $T>
+                + Neg<Output = $T> + Copy,
+        {
+            type Output = <$t as $imp<$u>>::Output;
+            fn $method(self, other: &'b $u) -> Self::Output {
+                $imp::$method(*self, *other)
+            }
+        }
+    }
+}
+
+forward_ref_bin_op!(Add, add, Complex<T>, Complex<T>, T);
+impl<T> Add for Complex<T>
 where
-    T: ops::Add<Output = T>,
+    T: Add<Output = T>,
 {
     type Output = Self;
     fn add(self, other: Self) -> Self {
@@ -112,9 +257,9 @@ where
     }
 }
 
-impl<T> ops::Add<f64> for Complex<T>
+impl<T> Add<f64> for Complex<T>
 where
-    T: ops::Add<f64, Output = T>,
+    T: Add<f64, Output = T>,
 {
     type Output = Self;
     fn add(self, other: f64) -> Self {
@@ -125,9 +270,9 @@ where
     }
 }
 
-impl<T> ops::Add<Complex<T>> for f64
+impl<T> Add<Complex<T>> for f64
 where
-    T: ops::Add<f64, Output = T>,
+    T: Add<f64, Output = T>,
 {
     type Output = Complex<T>;
     fn add(self, other: Complex<T>) -> Complex<T> {
@@ -138,9 +283,9 @@ where
     }
 }
 
-impl<T> ops::Add<Complex<Complex<T>>> for Complex<T>
+impl<T> Add<Complex<Complex<T>>> for Complex<T>
 where
-    T: ops::Add<Output = T>,
+    T: Add<Output = T>,
 {
     type Output = Complex<Complex<T>>;
     fn add(self, other: Complex<Complex<T>>) -> Complex<Complex<T>> {
@@ -151,9 +296,9 @@ where
     }
 }
 
-impl<T> ops::Add<Complex<T>> for Complex<Complex<T>>
+impl<T> Add<Complex<T>> for Complex<Complex<T>>
 where
-    T: ops::Add<Output = T>,
+    T: Add<Output = T>,
 {
     type Output = Complex<Complex<T>>;
     fn add(self, other: Complex<T>) -> Complex<Complex<T>> {
@@ -164,9 +309,10 @@ where
     }
 }
 
-impl<T> ops::Sub for Complex<T>
+forward_ref_bin_op!(Sub, sub, Complex<T>, Complex<T>, T);
+impl<T> Sub for Complex<T>
 where
-    T: ops::Sub<Output = T>,
+    T: Sub<Output = T>,
 {
     type Output = Self;
     fn sub(self, other: Self) -> Self {
@@ -177,9 +323,9 @@ where
     }
 }
 
-impl<T> ops::Sub<f64> for Complex<T>
+impl<T> Sub<f64> for Complex<T>
 where
-    T: ops::Sub<f64, Output = T>,
+    T: Sub<f64, Output = T>,
 {
     type Output = Self;
     fn sub(self, other: f64) -> Self {
@@ -190,9 +336,9 @@ where
     }
 }
 
-impl<T> ops::Sub<Complex<T>> for f64
+impl<T> Sub<Complex<T>> for f64
 where
-    T: ops::Neg<Output = T> + ops::Add<f64, Output = T>,
+    T: Neg<Output = T> + Add<f64, Output = T>,
 {
     type Output = Complex<T>;
     fn sub(self, other: Complex<T>) -> Complex<T> {
@@ -203,9 +349,9 @@ where
     }
 }
 
-impl<T> ops::Sub<Complex<Complex<T>>> for Complex<T>
+impl<T> Sub<Complex<Complex<T>>> for Complex<T>
 where
-    T: ops::Sub<Output = T>,
+    T: Sub<Output = T>,
 {
     type Output = Complex<Complex<T>>;
     fn sub(self, other: Complex<Complex<T>>) -> Complex<Complex<T>> {
@@ -216,9 +362,9 @@ where
     }
 }
 
-impl<T> ops::Sub<Complex<T>> for Complex<Complex<T>>
+impl<T> Sub<Complex<T>> for Complex<Complex<T>>
 where
-    T: ops::Sub<Output = T>,
+    T: Sub<Output = T>,
 {
     type Output = Complex<Complex<T>>;
     fn sub(self, other: Complex<T>) -> Complex<Complex<T>> {
@@ -229,12 +375,13 @@ where
     }
 }
 
-impl<T> ops::Mul for Complex<T>
+forward_ref_bin_op!(Mul, mul, Complex<T>, Complex<T>, T);
+impl<T> Mul for Complex<T>
 where
-    T: Conjugate + Copy + ops::Add<Output = T> + ops::Sub<Output = T> + ops::Mul<Output = T>,
+    T: Conjugate + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T>,
 {
     type Output = Self;
-    fn mul(self, other: Self) -> Self {
+    fn mul(self, other: Self) -> Self::Output {
         Self {
             re: self.re * other.re - other.im.conj() * self.im,
             im: other.im * self.re + self.im * other.re.conj(),
@@ -242,9 +389,9 @@ where
     }
 }
 
-impl<T> ops::Mul<f64> for Complex<T>
+impl<T> Mul<f64> for Complex<T>
 where
-    T: ops::Mul<f64, Output = T>,
+    T: Mul<f64, Output = T>,
 {
     type Output = Self;
     fn mul(self, other: f64) -> Self {
@@ -255,9 +402,9 @@ where
     }
 }
 
-impl<T> ops::Mul<Complex<T>> for f64
+impl<T> Mul<Complex<T>> for f64
 where
-    T: ops::Mul<f64, Output = T>,
+    T: Mul<f64, Output = T>,
 {
     type Output = Complex<T>;
     fn mul(self, other: Complex<T>) -> Complex<T> {
@@ -268,10 +415,11 @@ where
     }
 }
 
-impl<T> ops::Div for Complex<T>
+forward_ref_bin_op!(Div, div, Complex<T>, Complex<T>, T);
+impl<T> Div for Complex<T>
 where
     Complex<T>:
-        Conjugate + AbsSq + ops::Mul<Output = Complex<T>> + ops::Div<f64, Output = Complex<T>>,
+        Conjugate + AbsSq + Mul<Output = Complex<T>> + Div<f64, Output = Complex<T>>,
 {
     type Output = Self;
     fn div(self, other: Self) -> Self {
@@ -279,9 +427,9 @@ where
     }
 }
 
-impl<T> ops::Div<f64> for Complex<T>
+impl<T> Div<f64> for Complex<T>
 where
-    Complex<T>: ops::Mul<f64, Output = Complex<T>>,
+    Complex<T>: Mul<f64, Output = Complex<T>>,
 {
     type Output = Self;
     fn div(self, other: f64) -> Self {
@@ -289,10 +437,10 @@ where
     }
 }
 
-impl<T> ops::Div<Complex<T>> for f64
+impl<T> Div<Complex<T>> for f64
 where
     Complex<T>:
-        Conjugate + AbsSq + ops::Mul<f64, Output = Complex<T>> + ops::Div<f64, Output = Complex<T>>,
+        Conjugate + AbsSq + Mul<f64, Output = Complex<T>> + Div<f64, Output = Complex<T>>,
 {
     type Output = Complex<T>;
     fn div(self, other: Complex<T>) -> Complex<T> {
@@ -353,18 +501,21 @@ where
 }
 
 /*
-impl FromStr for complex<T> {
+impl FromStr for Complex<T> {
+    where T: FromStr
     type Err = ParseFloatError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let coords: Vec<&str> = s.split("+i").collect();
+        // suppose "4+2i" or "4+i2" or "2i+4" or "i2+4"
+        let coords: Vec<&str> = s.split(|c| {c == '+' || c == '-'}).collect();
 
+        
+        
         //if coords.len() == 2 {
-        let x = coords[0].parse::<f64>()?;
-        let y = coords[1].parse::<f64>()?;
+        let x = (coords[0]).parse::<T>()?;
+        let y = (coords[1] ).parse::<T>()?;
 
-        Ok(c128{ re: x, im: y})
-        //}
+        Ok(Complex<T>{ re: x, im: y})
     }
 }
 */

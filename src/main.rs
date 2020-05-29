@@ -3,6 +3,8 @@ use complex::*;
 fn main() {
     let z = Complex::new(1.0_f64, -1.0_f64);
     let z_star = z.conj();
+    
+    println!("{}", -&z);
 
     println!("{}", z * z_star);
     println!("{}", z.abs_sq());
@@ -53,4 +55,9 @@ fn main() {
     println!("{}", quaternion);
     let octonion = complex![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64, 6.0_f64, 7.0_f64, 8.0_f64];
     println!("{}", octonion);
+    let (r, polar_octo) = octonion.polar_rep();
+    println!("Polar representation");
+    println!("{}, {}", r, polar_octo);
+    println!("r*exp(polar_octo)");
+    println!("{}", r * polar_octo.exp());
 }
