@@ -1,8 +1,7 @@
 use std::any::type_name;
 use std::num::ParseFloatError;
-use std::str::FromStr;
-use std::fmt;
-use std::ops::{Add, Sub, Mul, Div, Neg};
+use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::{fmt, str::FromStr};
 
 fn type_of<T>(_: &T) -> &'static str {
     type_name::<T>()
@@ -148,21 +147,22 @@ where
 
 macro_rules! forward_ref_un_op {
     ($imp:ident, $method:ident, $t:ty, $T:tt) => {
-        impl<$T> $imp for &$t 
-        where $T: Neg<Output = $T> + Copy, 
+        impl<$T> $imp for &$t
+        where
+            $T: $imp<Output = $T> + Copy,
         {
             type Output = $t;
             fn $method(self) -> Self::Output {
                 $imp::$method(*self)
-            } 
-        
+            }
         }
-    }
+    };
 }
 
 forward_ref_un_op!(Neg, neg, Complex<T>, T);
 impl<T> Neg for Complex<T>
-where T: Neg<Output = T>,
+where
+    T: Neg<Output = T>,
 {
     type Output = Complex<T>;
     fn neg(self) -> Self {
@@ -189,7 +189,8 @@ macro_rules! forward_ref_bin_op {
                 + Mul<f64, Output = $T>
                 + Div<Output = $T>
                 + Div<f64, Output = $T>
-                + Neg<Output = $T> + Copy,
+                + Neg<Output = $T>
+                + Copy,
         {
             type Output = <$t as $imp<$u>>::Output;
             fn $method(self, other: &$u) -> Self::Output {
@@ -211,7 +212,8 @@ macro_rules! forward_ref_bin_op {
                 + Mul<f64, Output = $T>
                 + Div<Output = $T>
                 + Div<f64, Output = $T>
-                + Neg<Output = $T> + Copy,
+                + Neg<Output = $T>
+                + Copy,
         {
             type Output = <$t as $imp<$u>>::Output;
             fn $method(self, other: $u) -> Self::Output {
@@ -233,14 +235,15 @@ macro_rules! forward_ref_bin_op {
                 + Mul<f64, Output = $T>
                 + Div<Output = $T>
                 + Div<f64, Output = $T>
-                + Neg<Output = $T> + Copy,
+                + Neg<Output = $T>
+                + Copy,
         {
             type Output = <$t as $imp<$u>>::Output;
             fn $method(self, other: &'b $u) -> Self::Output {
                 $imp::$method(*self, *other)
             }
         }
-    }
+    };
 }
 
 forward_ref_bin_op!(Add, add, Complex<T>, Complex<T>, T);
@@ -257,6 +260,7 @@ where
     }
 }
 
+forward_ref_bin_op!(Add, add, Complex<T>, f64, T);
 impl<T> Add<f64> for Complex<T>
 where
     T: Add<f64, Output = T>,
@@ -270,6 +274,7 @@ where
     }
 }
 
+forward_ref_bin_op!(Add, add, f64, Complex<T>, T);
 impl<T> Add<Complex<T>> for f64
 where
     T: Add<f64, Output = T>,
@@ -283,6 +288,7 @@ where
     }
 }
 
+forward_ref_bin_op!(Add, add, Complex<T>, Complex<Complex<T>>, T);
 impl<T> Add<Complex<Complex<T>>> for Complex<T>
 where
     T: Add<Output = T>,
@@ -296,6 +302,7 @@ where
     }
 }
 
+forward_ref_bin_op!(Add, add, Complex<Complex<T>>, Complex<T>, T);
 impl<T> Add<Complex<T>> for Complex<Complex<T>>
 where
     T: Add<Output = T>,
@@ -323,6 +330,7 @@ where
     }
 }
 
+forward_ref_bin_op!(Sub, sub, Complex<T>, f64, T);
 impl<T> Sub<f64> for Complex<T>
 where
     T: Sub<f64, Output = T>,
@@ -336,6 +344,7 @@ where
     }
 }
 
+forward_ref_bin_op!(Sub, sub, f64, Complex<T>, T);
 impl<T> Sub<Complex<T>> for f64
 where
     T: Neg<Output = T> + Add<f64, Output = T>,
@@ -349,6 +358,7 @@ where
     }
 }
 
+forward_ref_bin_op!(Sub, sub, Complex<T>, Complex<Complex<T>>, T);
 impl<T> Sub<Complex<Complex<T>>> for Complex<T>
 where
     T: Sub<Output = T>,
@@ -362,6 +372,7 @@ where
     }
 }
 
+forward_ref_bin_op!(Sub, sub, Complex<Complex<T>>, Complex<T>, T);
 impl<T> Sub<Complex<T>> for Complex<Complex<T>>
 where
     T: Sub<Output = T>,
@@ -378,7 +389,11 @@ where
 forward_ref_bin_op!(Mul, mul, Complex<T>, Complex<T>, T);
 impl<T> Mul for Complex<T>
 where
-    T: Conjugate + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T>,
+    T: Conjugate 
+        + Copy 
+        + Add<Output = T> 
+        + Sub<Output = T> 
+        + Mul<Output = T>,
 {
     type Output = Self;
     fn mul(self, other: Self) -> Self::Output {
@@ -389,6 +404,7 @@ where
     }
 }
 
+forward_ref_bin_op!(Mul, mul, Complex<T>, f64, T);
 impl<T> Mul<f64> for Complex<T>
 where
     T: Mul<f64, Output = T>,
@@ -402,6 +418,7 @@ where
     }
 }
 
+forward_ref_bin_op!(Mul, mul, f64, Complex<T>, T);
 impl<T> Mul<Complex<T>> for f64
 where
     T: Mul<f64, Output = T>,
@@ -418,8 +435,10 @@ where
 forward_ref_bin_op!(Div, div, Complex<T>, Complex<T>, T);
 impl<T> Div for Complex<T>
 where
-    Complex<T>:
-        Conjugate + AbsSq + Mul<Output = Complex<T>> + Div<f64, Output = Complex<T>>,
+    Complex<T>: Conjugate 
+        + AbsSq 
+        + Mul<Output = Complex<T>> 
+        + Div<f64, Output = Complex<T>>,
 {
     type Output = Self;
     fn div(self, other: Self) -> Self {
@@ -427,6 +446,7 @@ where
     }
 }
 
+forward_ref_bin_op!(Div, div, Complex<T>, f64, T);
 impl<T> Div<f64> for Complex<T>
 where
     Complex<T>: Mul<f64, Output = Complex<T>>,
@@ -437,10 +457,13 @@ where
     }
 }
 
+forward_ref_bin_op!(Div, div, f64, Complex<T>, T);
 impl<T> Div<Complex<T>> for f64
 where
-    Complex<T>:
-        Conjugate + AbsSq + Mul<f64, Output = Complex<T>> + Div<f64, Output = Complex<T>>,
+    Complex<T>: Conjugate 
+        + AbsSq 
+        + Mul<f64, Output = Complex<T>> 
+        + Div<f64, Output = Complex<T>>,
 {
     type Output = Complex<T>;
     fn div(self, other: Complex<T>) -> Complex<T> {
@@ -509,8 +532,8 @@ impl FromStr for Complex<T> {
         // suppose "4+2i" or "4+i2" or "2i+4" or "i2+4"
         let coords: Vec<&str> = s.split(|c| {c == '+' || c == '-'}).collect();
 
-        
-        
+
+
         //if coords.len() == 2 {
         let x = (coords[0]).parse::<T>()?;
         let y = (coords[1] ).parse::<T>()?;
