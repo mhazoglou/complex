@@ -4,7 +4,8 @@ fn main() {
     let z = Complex::new(1.0_f64, -1.0_f64);
     let z_star = z.conj();
 
-    println!("{}", &z);
+    println!("{}", z.powu(2));
+	println!("{}", z.powi(-2));
 
     println!("{}", z * z_star);
     println!("{}", z.abs_sq());

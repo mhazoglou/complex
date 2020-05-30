@@ -83,6 +83,53 @@ where
 
         (r, imag_exp)
     }
+	
+	fn pow_tail(z: &Self, num: u32, acc: Self) -> Self {
+		if num == 0 {
+			return acc;
+		}
+		
+		Self::pow_tail(z, num - 1, z * acc)
+	}
+	
+	pub fn powu(&self, num: u32) -> Self {
+		
+		// if num == 0 {
+			// 0. * self + 1.
+		// } else if num == 1 {
+			// *self
+		// } else {
+			// self * self.powu(num - 1)
+		// }
+		
+		Self::pow_tail(self, num, 0. * self + 1.)
+	}
+	
+	pub fn powi(&self, num: i32) -> Self {
+		// fn pow_tail(z: Self, num: u32, acc: Self) => Self {
+			// if acc == 
+		// }
+		if num == 0 {
+			0. * self
+		} else if num < 0 {
+			let z = self.powu(-num as u32);
+			1. / z
+		} else {
+			self.powu(num as u32)
+		}
+	}
+	
+	pub fn powf(&self, num: f64) -> Self {
+		let (r, imag_exp) = self.polar_rep();
+		
+		r.powf(num) * (num * imag_exp).exp() 
+	}
+	
+	pub fn powz(&self, num: Self) -> Self {
+		let (r, imag_exp) = self.polar_rep();
+		
+		(r.ln() * num).exp() * (num * imag_exp).exp() 
+	}
 }
 
 pub trait Conjugate {
