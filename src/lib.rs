@@ -1,6 +1,8 @@
 use std::any::type_name;
 use std::num::ParseFloatError;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub, 
+               AddAssign, SubAssign, MulAssign, DivAssign};
+use std::iter::{Sum, Product};
 use std::{fmt, str::FromStr};
 
 fn type_of<T>(_: &T) -> &'static str {
@@ -19,11 +21,22 @@ macro_rules! complex{
             complex![
                 $(
                     Complex::new($x, $y)
-                ),*
+                ),+
             ]
         }
     };
+    ( $x:expr; $y:expr ) => {
+        let z = Complex::new($x, $x);
+        
+        for _ in 0..$y {
+            let z = Complex::new(z, z);
+        }
+        
+        z
+    }
 }
+
+
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Complex<T> {
@@ -35,6 +48,7 @@ impl<T> Complex<T>
 where
     T: Conjugate
         + AbsSq
+        + Fill
         + Real
         + Copy
         + Add<Output = T>
@@ -132,6 +146,52 @@ where
 	}
 }
 
+pub trait Fill {
+    fn zero() -> Self;
+    fn one() -> Self;
+    fn fill(num: f64) -> Self;
+}
+
+impl Fill for f64 {
+    fn zero() -> Self {
+        0.0_f64
+    }
+    
+    fn one() -> Self {
+        1.0_f64
+    }
+    
+    fn fill(num: f64) -> Self {
+        num
+    }
+}
+
+impl<T> Fill for Complex<T> 
+where
+    T: Fill + Copy
+{
+    fn zero() -> Self {
+        Self {
+            re: <T as Fill>::zero(),
+            im: <T as Fill>::zero()
+        }
+    }
+    
+    fn one() -> Self {
+        Self {
+            re: <T as Fill>::one(),
+            im: <T as Fill>::zero()
+        }
+    }
+    
+    fn fill(num: f64) -> Self {
+        Self {
+            re: <T as Fill>::fill(num),
+            im: <T as Fill>::fill(num)
+        }
+    }
+}
+
 pub trait Conjugate {
     fn conj(&self) -> Self;
 }
@@ -212,7 +272,7 @@ where
     T: Neg<Output = T>,
 {
     type Output = Complex<T>;
-    fn neg(self) -> Self {
+    fn neg(self) -> Self::Output {
         Self {
             re: -self.re,
             im: -self.im,
@@ -224,20 +284,8 @@ macro_rules! forward_ref_bin_op {
     ($imp:ident, $method:ident, $t:ty, $u:ty, $T:tt) => {
         impl<$T> $imp<&$u> for $t
         where
-            $T: Conjugate
-                + AbsSq
-                + Real
-                + Copy
-                + Add<Output = $T>
-                + Add<f64, Output = $T>
-                + Sub<Output = $T>
-                + Sub<f64, Output = $T>
-                + Mul<Output = $T>
-                + Mul<f64, Output = $T>
-                + Div<Output = $T>
-                + Div<f64, Output = $T>
-                + Neg<Output = $T>
-                + Copy,
+            $t: $imp<$u> + Copy,
+            $u: Copy
         {
             type Output = <$t as $imp<$u>>::Output;
             fn $method(self, other: &$u) -> Self::Output {
@@ -247,20 +295,8 @@ macro_rules! forward_ref_bin_op {
 
         impl<$T> $imp<$u> for &$t
         where
-            $T: Conjugate
-                + AbsSq
-                + Real
-                + Copy
-                + Add<Output = $T>
-                + Add<f64, Output = $T>
-                + Sub<Output = $T>
-                + Sub<f64, Output = $T>
-                + Mul<Output = $T>
-                + Mul<f64, Output = $T>
-                + Div<Output = $T>
-                + Div<f64, Output = $T>
-                + Neg<Output = $T>
-                + Copy,
+            $t: $imp<$u> + Copy,
+            $u: Copy
         {
             type Output = <$t as $imp<$u>>::Output;
             fn $method(self, other: $u) -> Self::Output {
@@ -270,20 +306,8 @@ macro_rules! forward_ref_bin_op {
 
         impl<'a, 'b, $T> $imp<&'b $u> for &'a $t
         where
-            $T: Conjugate
-                + AbsSq
-                + Real
-                + Copy
-                + Add<Output = $T>
-                + Add<f64, Output = $T>
-                + Sub<Output = $T>
-                + Sub<f64, Output = $T>
-                + Mul<Output = $T>
-                + Mul<f64, Output = $T>
-                + Div<Output = $T>
-                + Div<f64, Output = $T>
-                + Neg<Output = $T>
-                + Copy,
+            $t: $imp<$u> + Copy,
+            $u: Copy
         {
             type Output = <$t as $imp<$u>>::Output;
             fn $method(self, other: &'b $u) -> Self::Output {
@@ -299,7 +323,7 @@ where
     T: Add<Output = T>,
 {
     type Output = Self;
-    fn add(self, other: Self) -> Self {
+    fn add(self, other: Self) -> Self::Output {
         Self {
             re: self.re + other.re,
             im: self.im + other.im,
@@ -313,7 +337,7 @@ where
     T: Add<f64, Output = T>,
 {
     type Output = Self;
-    fn add(self, other: f64) -> Self {
+    fn add(self, other: f64) -> Self::Output {
         Self {
             re: self.re + other,
             im: self.im,
@@ -327,7 +351,7 @@ where
     T: Add<f64, Output = T>,
 {
     type Output = Complex<T>;
-    fn add(self, other: Complex<T>) -> Complex<T> {
+    fn add(self, other: Complex<T>) -> Self::Output {
         Complex::<T> {
             re: other.re + self,
             im: other.im,
@@ -341,7 +365,7 @@ where
     T: Add<Output = T>,
 {
     type Output = Complex<Complex<T>>;
-    fn add(self, other: Complex<Complex<T>>) -> Complex<Complex<T>> {
+    fn add(self, other: Complex<Complex<T>>) -> Self::Output {
         Complex::<Complex<T>> {
             re: self + other.re,
             im: other.im,
@@ -355,7 +379,7 @@ where
     T: Add<Output = T>,
 {
     type Output = Complex<Complex<T>>;
-    fn add(self, other: Complex<T>) -> Complex<Complex<T>> {
+    fn add(self, other: Complex<T>) -> Self::Output {
         Complex::<Complex<T>> {
             re: self.re + other,
             im: self.im,
@@ -369,7 +393,7 @@ where
     T: Sub<Output = T>,
 {
     type Output = Self;
-    fn sub(self, other: Self) -> Self {
+    fn sub(self, other: Self) -> Self::Output {
         Self {
             re: self.re - other.re,
             im: self.im - other.im,
@@ -383,7 +407,7 @@ where
     T: Sub<f64, Output = T>,
 {
     type Output = Self;
-    fn sub(self, other: f64) -> Self {
+    fn sub(self, other: f64) -> Self::Output {
         Self {
             re: self.re - other,
             im: self.im,
@@ -397,7 +421,7 @@ where
     T: Neg<Output = T> + Add<f64, Output = T>,
 {
     type Output = Complex<T>;
-    fn sub(self, other: Complex<T>) -> Complex<T> {
+    fn sub(self, other: Complex<T>) -> Self::Output {
         Complex::<T> {
             re: -other.re + self,
             im: -other.im,
@@ -411,7 +435,7 @@ where
     T: Sub<Output = T>,
 {
     type Output = Complex<Complex<T>>;
-    fn sub(self, other: Complex<Complex<T>>) -> Complex<Complex<T>> {
+    fn sub(self, other: Complex<Complex<T>>) -> Self::Output {
         Complex::<Complex<T>> {
             re: self - other.re,
             im: other.im,
@@ -425,7 +449,7 @@ where
     T: Sub<Output = T>,
 {
     type Output = Complex<Complex<T>>;
-    fn sub(self, other: Complex<T>) -> Complex<Complex<T>> {
+    fn sub(self, other: Complex<T>) -> Self::Output {
         Complex::<Complex<T>> {
             re: self.re - other,
             im: self.im,
@@ -457,7 +481,7 @@ where
     T: Mul<f64, Output = T>,
 {
     type Output = Self;
-    fn mul(self, other: f64) -> Self {
+    fn mul(self, other: f64) -> Self::Output {
         Self {
             re: self.re * other,
             im: self.im * other,
@@ -471,7 +495,7 @@ where
     T: Mul<f64, Output = T>,
 {
     type Output = Complex<T>;
-    fn mul(self, other: Complex<T>) -> Complex<T> {
+    fn mul(self, other: Complex<T>) -> Self::Output {
         Complex::<T> {
             re: other.re * self,
             im: other.im * self,
@@ -488,7 +512,7 @@ where
         + Div<f64, Output = Complex<T>>,
 {
     type Output = Self;
-    fn div(self, other: Self) -> Self {
+    fn div(self, other: Self) -> Self::Output {
         self * other.conj() / other.abs_sq()
     }
 }
@@ -499,7 +523,7 @@ where
     Complex<T>: Mul<f64, Output = Complex<T>>,
 {
     type Output = Self;
-    fn div(self, other: f64) -> Self {
+    fn div(self, other: f64) -> Self::Output {
         self * (1. / other)
     }
 }
@@ -513,10 +537,82 @@ where
         + Div<f64, Output = Complex<T>>,
 {
     type Output = Complex<T>;
-    fn div(self, other: Complex<T>) -> Complex<T> {
+    fn div(self, other: Complex<T>) -> Self::Output {
         other.conj() * (self / other.abs_sq())
     }
 }
+
+impl<T> Sum for Complex<T>
+where
+    Complex<T>: Fill + Add<Output=Complex<T>>, 
+{
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Self>,
+    {   
+        iter.fold(Self::zero(), Add::add)
+    }
+}
+
+impl<'a, T: 'a> Sum<&'a Complex<T>> for Complex<T>
+where
+    Complex<T>: Fill + Add<Output=Complex<T>> + Copy,
+{
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = &'a Self>,
+    {
+        iter.map(|x| *x).sum::<Self>()
+    }
+}
+
+impl<T> Product for Complex<T>
+where
+    Complex<T>: Fill + Mul<Output=Complex<T>>, 
+{
+    fn product<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Self>,
+    {   
+        iter.fold(Self::one(), Mul::mul)
+    }
+}
+
+impl<'a, T: 'a> Product<&'a Complex<T>> for Complex<T>
+where
+    Complex<T>: Fill + Mul<Output=Complex<T>> + Copy,
+{
+    fn product<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = &'a Self>,
+    {
+        iter.map(|x| *x).product::<Self>()
+    }
+}
+
+macro_rules! bin_op_assign {
+    ($assign:ident, $method:ident, $base_trait:ident,
+     $base_method:ident, $t:ty, $u:ty, $T:tt) => {
+        impl<$T> $assign<$u> for $t 
+        where 
+            $t: $base_trait<$u, Output=$t> + Copy,
+        {
+            fn $method(&mut self, other: $u) {
+                let cp = *self;
+                *self = $base_trait::$base_method(cp, other);
+            }
+        }
+    }
+}
+
+bin_op_assign!(AddAssign, add_assign, Add, add, Complex<T>, Complex<T>, T);
+bin_op_assign!(AddAssign, add_assign, Add, add, Complex<T>, f64, T);
+bin_op_assign!(SubAssign, sub_assign, Sub, sub, Complex<T>, Complex<T>, T);
+bin_op_assign!(SubAssign, sub_assign, Sub, sub, Complex<T>, f64, T);
+bin_op_assign!(MulAssign, mul_assign, Mul, mul, Complex<T>, Complex<T>, T);
+bin_op_assign!(MulAssign, mul_assign, Mul, mul, Complex<T>, f64, T);
+bin_op_assign!(DivAssign, div_assign, Div, div, Complex<T>, Complex<T>, T);
+bin_op_assign!(DivAssign, div_assign, Div, div, Complex<T>, f64, T);
 
 impl<T> fmt::Display for Complex<T>
 where

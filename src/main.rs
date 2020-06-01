@@ -3,9 +3,18 @@ use complex::*;
 fn main() {
     let z = Complex::new(1.0_f64, -1.0_f64);
     let z_star = z.conj();
+    let v = vec![z; 3];
+    let sede = complex![1., 2., 3., 4., 5., 6., 7., 8., 1., 2., 3., 4., 5., 6., 7., 8.];
+    println!("{}", sede);
+    
+    let mut zero = Complex::<Complex<Complex<f64>>>::zero();
+    zero += Complex::<Complex<Complex<f64>>>::one();
+    println!("{}", zero);
 
-    println!("{}", z.powu(2));
-	println!("{}", z.powi(-2));
+    println!("{}", z.powf(3.5));
+	println!("{}", z.powf(-3.5));
+    println!("{}", z.powf(3.5) * z.powf(-3.5));
+    println!("{}", v.iter().sum::<Complex::<f64>>());
 
     println!("{}", z * z_star);
     println!("{}", z.abs_sq());
@@ -22,12 +31,12 @@ fn main() {
     println!("{}\n", 2. - z);
 
     let q = Complex::<Complex<f64>>::new(z, z_star);
-    let Q = Complex::<Complex<f64>>::new(z_star, z);
+    let kyu = Complex::<Complex<f64>>::new(z_star, z);
     println!("Build some quaternions recursively");
     println!("{}", q);
-    println!("{}\n", Q);
+    println!("{}\n", kyu);
     println!("Add some quaternions using recursion");
-    println!("{}", q + Q);
+    println!("{}", q + kyu);
     println!("Add a quaternion with a complex number");
     println!("{}", q + z);
     println!("And it commutes");
@@ -37,15 +46,16 @@ fn main() {
     println!("Multiply quaternions using recursion");
     println!("{}", q * q.conj());
     println!("This does not commute:");
-    println!("{}", q * Q);
-    println!("{}", Q * q);
+    println!("{}", q * kyu);
+    println!("{}", kyu * q);
     println!("Commutator:");
-    println!("{\n}", q * Q - Q * q);
+    println!("{\n}", q * kyu - kyu * q);
+    println!("{}", q.powz(q));
 
     println!("Norm Squared:");
-    println!("{}\n", Q.abs_sq());
+    println!("{}\n", kyu.abs_sq());
     println!("Inverse of a quaternion:");
-    println!("{}\n", 1. / Q);
+    println!("{}\n", 1. / kyu);
 
     println!("Macros are great for constructing the");
     // macros to construct Complex type easily only work
