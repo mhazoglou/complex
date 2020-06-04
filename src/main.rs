@@ -1,20 +1,26 @@
 use complex::*;
 
 fn main() {
-    let z = Complex::new(1.0_f64, -1.0_f64);
+    let z = Complex::new(8.0_f64, 2.0_f64);
+    let z2 = complex![2., 1.];
+    let z3 =  (z / z2);//.floor();
+    println!("ratio: {}", z3);
     let z_star = z.conj();
     let v = vec![z; 3];
-    let sede = complex![1., 2., 3., 4., 5., 6., 7., 8., 1., 2., 3., 4., 5., 6., 7., 8.];
+    let vec = vec![1., 2., 3., 4., 5., 6., 7., 8., 1., 2., 3., 4., 5., 6., 7., 8.];
+    let sede = Sedenionf64::from_slice(&vec[..]);
+    let sede2 = Sedenionf64::from_vec(vec);
+    assert_eq!(sede, sede2);
     println!("{}", sede);
-    
-    let mut zero = Complex::<Complex<Complex<f64>>>::zero();
-    zero += Complex::<Complex<Complex<f64>>>::one();
+
+    let mut zero = Octonionf64::zero();
+    zero += Octonionf64::one();
     println!("{}", zero);
 
-    println!("{}", z.powf(3.5));
-	println!("{}", z.powf(-3.5));
-    println!("{}", z.powf(3.5) * z.powf(-3.5));
-    println!("{}", v.iter().sum::<Complex::<f64>>());
+    println!("{}", z.powu(3));
+    println!("{}", z.powi(-3));
+    println!("{}", z.powf(3.0));
+    // println!("{}", v.iter().sum::<Complex<f64>>());
 
     println!("{}", z * z_star);
     println!("{}", z.abs_sq());
@@ -50,7 +56,7 @@ fn main() {
     println!("{}", kyu * q);
     println!("Commutator:");
     println!("{\n}", q * kyu - kyu * q);
-    println!("{}", q.powz(q));
+    // println!("{}", q.powz(q));
 
     println!("Norm Squared:");
     println!("{}\n", kyu.abs_sq());
@@ -66,9 +72,9 @@ fn main() {
     println!("{}", quaternion);
     let octonion = complex![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64, 6.0_f64, 7.0_f64, 8.0_f64];
     println!("{}", octonion);
-    let (r, polar_octo) = octonion.polar_rep();
-    println!("Polar representation");
-    println!("{}, {}", r, polar_octo);
-    println!("r*exp(polar_octo)");
-    println!("{}", r * polar_octo.exp());
+    let polar_octo = octonion.ln();
+    println!("Logarithm");
+    println!("{}", polar_octo);
+    println!("exp(polar_octo)");
+    println!("{}", polar_octo.exp());
 }
