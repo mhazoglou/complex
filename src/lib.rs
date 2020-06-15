@@ -126,10 +126,10 @@ pub trait Functions<U, V> {
 }
 
 macro_rules! impl_functions_for_float {
-    ($($ty:ty),* ) => {
+    ($($u:ty),* ) => {
         $(
-            impl<T> Functions<$ty, Complex<T>> for $ty 
-            where Complex<T>: Mul<$ty, Output=Complex<T>> + Functions<$ty, Complex<T>>,
+            impl<T> Functions<$u, Complex<T>> for $u 
+            where Complex<T>: Mul<$u, Output=Complex<T>> + Functions<$u, Complex<T>>,
             {
                 fn exp(&self) -> Self {
                     self.exp()
@@ -152,11 +152,11 @@ macro_rules! impl_functions_for_float {
                         return acc;
                     }
 
-                    <Self as Functions<$ty, Complex<T>>>::powu_tail(self, num - 1, self * acc)
+                    <Self as Functions<$u, Complex<T>>>::powu_tail(self, num - 1, self * acc)
                 }
                 
                 fn powu(&self, num: u32) -> Self {
-                    <Self as Functions<$ty, Complex<T>>>::powu_tail(self, num, Self::one())
+                    <Self as Functions<$u, Complex<T>>>::powu_tail(self, num, Self::one())
                 }
                 
                 fn powi(&self, num: i32) -> Self {
@@ -164,21 +164,21 @@ macro_rules! impl_functions_for_float {
                 }
             }
             
-            impl<T> Functions<$ty, Complex<T>> for Complex<T>
+            impl<T> Functions<$u, Complex<T>> for Complex<T>
             where
                 T: Conjugate
-                    + AbsSq<$ty>
-                    + Fill<$ty>
-                    + Real<$ty>
+                    + AbsSq<$u>
+                    + Fill<$u>
+                    + Real<$u>
                     + Copy
                     + Add<Output = T>
-                    + Add<$ty, Output = T>
+                    + Add<$u, Output = T>
                     + Sub<Output = T>
-                    + Sub<$ty, Output = T>
+                    + Sub<$u, Output = T>
                     + Mul<Output = T>
-                    + Mul<$ty, Output = T>
+                    + Mul<$u, Output = T>
                     + Div<Output = T>
-                    + Div<$ty, Output = T>
+                    + Div<$u, Output = T>
                     + Neg<Output = T>,
             {
                 fn exp(&self) -> Self {
@@ -214,7 +214,7 @@ macro_rules! impl_functions_for_float {
                     r.ln() + imag_exp
                 }
                 
-                fn powf(&self, num: $ty) -> Self {
+                fn powf(&self, num: $u) -> Self {
                     let ln_z = self.ln();
 
                     (num * ln_z).exp()
@@ -231,11 +231,11 @@ macro_rules! impl_functions_for_float {
                         return acc;
                     }
 
-                    <Self as Functions<$ty, Complex<T>>>::powu_tail(self, num - 1, self * acc)
+                    <Self as Functions<$u, Complex<T>>>::powu_tail(self, num - 1, self * acc)
                 }
 
                 fn powu(&self, num: u32) -> Self {
-                    <Self as Functions<$ty, Complex<T>>>::powu_tail(self, num, Self::one())
+                    <Self as Functions<$u, Complex<T>>>::powu_tail(self, num, Self::one())
                 }
 
                 fn powi(&self, num: i32) -> Self {
@@ -264,9 +264,9 @@ pub trait Fill<U> {
 }
 
 macro_rules! impl_fill_for_float {
-    ( $($ty:ty),* ) => {
+    ( $($u:ty),* ) => {
         $(
-            impl Fill<$ty> for $ty {
+            impl Fill<$u> for $u {
                 fn zero() -> Self {
                     0.0
                 }
@@ -275,15 +275,15 @@ macro_rules! impl_fill_for_float {
                     1.0
                 }
 
-                fn fill(num: $ty) -> Self {
+                fn fill(num: $u) -> Self {
                     num
                 }
                 
-                fn from_slice(v: &[$ty]) -> Self {
+                fn from_slice(v: &[$u]) -> Self {
                     v[0]
                 }
                 
-                fn from_vec(v: Vec<$ty>) -> Self {
+                fn from_vec(v: Vec<$u>) -> Self {
                     v[0]
                 }
             }
@@ -345,9 +345,9 @@ pub trait Conjugate {
 }
 
 macro_rules! impl_conj_for {
-    ( $($ty:ty),* ) => {
+    ( $($u:ty),* ) => {
         $(
-            impl Conjugate for $ty {
+            impl Conjugate for $u {
                 fn conj(&self) -> Self {
                     *self
                 }
@@ -375,19 +375,19 @@ pub trait AbsSq<U> {
 }
 
 macro_rules! impl_abs_sq_for {
-    ( $($ty:ty),* ) => {
+    ( $($u:ty),* ) => {
         $(
-            impl AbsSq<$ty> for $ty {
-                fn abs_sq(&self) -> $ty {
+            impl AbsSq<$u> for $u {
+                fn abs_sq(&self) -> $u {
                     self * self
                 }
             }
 
-            impl<T> AbsSq<$ty> for Complex<T>
+            impl<T> AbsSq<$u> for Complex<T>
             where
-                T: AbsSq<$ty> + Copy + Add<Output = T>,
+                T: AbsSq<$u> + Copy + Add<Output = T>,
             {
-                fn abs_sq(&self) -> $ty {
+                fn abs_sq(&self) -> $u {
                     self.re.abs_sq() + self.im.abs_sq()
                 }
             }
@@ -402,19 +402,19 @@ pub trait Real<U> {
 }
 
 macro_rules! impl_real_for {
-    ( $($ty:ty),* ) => {
+    ( $($u:ty),* ) => {
         $(
-            impl Real<$ty> for $ty {
-                fn real(&self) -> $ty {
+            impl Real<$u> for $u {
+                fn real(&self) -> $u {
                     *self
                 }
             }
 
-            impl<T> Real<$ty> for Complex<T>
+            impl<T> Real<$u> for Complex<T>
             where
-                T: Real<$ty> + Copy,
+                T: Real<$u> + Copy,
             {
-                fn real(&self) -> $ty {
+                fn real(&self) -> $u {
                     self.re.real()
                 }
             }
