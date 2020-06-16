@@ -4,7 +4,6 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssi
 pub mod fmt;
 pub mod ops;
 
-
 #[macro_export]
 macro_rules! complex{
     ( $x:expr, $y:expr ) => {
@@ -19,72 +18,6 @@ macro_rules! complex{
                     Complex::new($x, $y)
                 ),+
             ]
-        }
-    };
-}
-
-macro_rules! forward_ref_un_op {
-    ($imp:ident, $method:ident, $t:ty, $T:tt) => {
-        impl<$T> $imp for &$t
-        where
-            $T: $imp<Output = $T> + Copy,
-        {
-            type Output = $t;
-            fn $method(self) -> Self::Output {
-                $imp::$method(*self)
-            }
-        }
-    };
-}
-
-macro_rules! forward_ref_bin_op {
-    ($imp:ident, $method:ident, $t:ty, $u:ty, $T:tt) => {
-        impl<$T> $imp<&$u> for $t
-        where
-            $t: $imp<$u> + Copy,
-            $u: Copy,
-        {
-            type Output = <$t as $imp<$u>>::Output;
-            fn $method(self, other: &$u) -> Self::Output {
-                $imp::$method(self, *other)
-            }
-        }
-
-        impl<$T> $imp<$u> for &$t
-        where
-            $t: $imp<$u> + Copy,
-            $u: Copy,
-        {
-            type Output = <$t as $imp<$u>>::Output;
-            fn $method(self, other: $u) -> Self::Output {
-                $imp::$method(*self, other)
-            }
-        }
-
-        impl<'a, 'b, $T> $imp<&'b $u> for &'a $t
-        where
-            $t: $imp<$u> + Copy,
-            $u: Copy,
-        {
-            type Output = <$t as $imp<$u>>::Output;
-            fn $method(self, other: &'b $u) -> Self::Output {
-                $imp::$method(*self, *other)
-            }
-        }
-    };
-}
-
-macro_rules! bin_op_assign {
-    ($assign:ident, $method:ident, $base_trait:ident,
-     $base_method:ident, $t:ty, $u:ty, $T:tt) => {
-        impl<$T> $assign<$u> for $t
-        where
-            $t: $base_trait<$u, Output = $t> + Copy,
-        {
-            fn $method(&mut self, other: $u) {
-                let cp = *self;
-                *self = $base_trait::$base_method(cp, other);
-            }
         }
     };
 }
@@ -107,8 +40,9 @@ pub struct Complex<T> {
     pub im: T,
 }
 
-impl<T> Complex<T> 
-where T: Conjugate + Copy
+impl<T> Complex<T>
+where
+    T: Conjugate + Copy,
 {
     pub fn new(re: T, im: T) -> Self {
         Self { re, im }
@@ -128,25 +62,25 @@ pub trait Functions<U, V> {
 macro_rules! impl_functions_for_float {
     ($($u:ty),* ) => {
         $(
-            impl<T> Functions<$u, Complex<T>> for $u 
+            impl<T> Functions<$u, Complex<T>> for $u
             where Complex<T>: Mul<$u, Output=Complex<T>> + Functions<$u, Complex<T>>,
             {
                 fn exp(&self) -> Self {
                     self.exp()
                 }
-                
+
                 fn ln(&self) -> Self {
                     self.ln()
                 }
-                
+
                 fn powf(&self, num: Self) -> Self {
                     self.powf(num)
                 }
-                
+
                 fn powz(&self, num: Complex<T>) -> Complex<T> {
                     (num * self.ln()).exp()
                 }
-                
+
                 fn powu_tail(&self, num: u32, acc: Self) -> Self {
                     if num == 0 {
                         return acc;
@@ -154,16 +88,16 @@ macro_rules! impl_functions_for_float {
 
                     <Self as Functions<$u, Complex<T>>>::powu_tail(self, num - 1, self * acc)
                 }
-                
+
                 fn powu(&self, num: u32) -> Self {
                     <Self as Functions<$u, Complex<T>>>::powu_tail(self, num, Self::one())
                 }
-                
+
                 fn powi(&self, num: i32) -> Self {
                     self.powi(num)
                 }
             }
-            
+
             impl<T> Functions<$u, Complex<T>> for Complex<T>
             where
                 T: Conjugate
@@ -213,7 +147,7 @@ macro_rules! impl_functions_for_float {
 
                     r.ln() + imag_exp
                 }
-                
+
                 fn powf(&self, num: $u) -> Self {
                     let ln_z = self.ln();
 
@@ -225,7 +159,7 @@ macro_rules! impl_functions_for_float {
 
                     (num * ln_z).exp()
                 }
-                
+
                 fn powu_tail(&self, num: u32, acc: Self) -> Self {
                     if num == 0 {
                         return acc;
@@ -255,18 +189,21 @@ macro_rules! impl_functions_for_float {
 
 impl_functions_for_float!(f32, f64);
 
-pub trait Fill<U> {
+pub trait Identity {
     fn zero() -> Self;
     fn one() -> Self;
+}
+
+pub trait Fill<U>: Identity {
     fn fill(num: U) -> Self;
     fn from_slice(v: &[U]) -> Self;
     fn from_vec(v: Vec<U>) -> Self;
 }
 
-macro_rules! impl_fill_for_float {
+macro_rules! impl_identity_for_float {
     ( $($u:ty),* ) => {
         $(
-            impl Fill<$u> for $u {
+            impl Identity for $u {
                 fn zero() -> Self {
                     0.0
                 }
@@ -274,15 +211,25 @@ macro_rules! impl_fill_for_float {
                 fn one() -> Self {
                     1.0
                 }
+            }
+        )*
+    };
+}
 
+impl_identity_for_float!(f32, f64);
+
+macro_rules! impl_fill_for_float {
+    ( $($u:ty),* ) => {
+        $(
+            impl Fill<$u> for $u {
                 fn fill(num: $u) -> Self {
                     num
                 }
-                
+
                 fn from_slice(v: &[$u]) -> Self {
                     v[0]
                 }
-                
+
                 fn from_vec(v: Vec<$u>) -> Self {
                     v[0]
                 }
@@ -293,49 +240,54 @@ macro_rules! impl_fill_for_float {
 
 impl_fill_for_float!(f32, f64);
 
-impl<T, U> Fill<U> for Complex<T>
+impl<T> Identity for Complex<T>
 where
-    T: Fill<U>,
-    U: Copy,
+    T: Identity,
 {
     fn zero() -> Self {
         Self {
-            re: <T as Fill<U>>::zero(),
-            im: <T as Fill<U>>::zero(),
+            re: <T as Identity>::zero(),
+            im: <T as Identity>::zero(),
         }
     }
 
     fn one() -> Self {
         Self {
-            re: <T as Fill<U>>::one(),
-            im: <T as Fill<U>>::zero(),
+            re: <T as Identity>::one(),
+            im: <T as Identity>::zero(),
         }
     }
+}
 
+impl<T, U> Fill<U> for Complex<T>
+where
+    T: Fill<U>,
+    U: Copy,
+{
     fn fill(num: U) -> Self {
         Self {
             re: <T as Fill<U>>::fill(num),
             im: <T as Fill<U>>::fill(num),
         }
     }
-    
+
     fn from_slice(v: &[U]) -> Self {
         let len = v.len();
-        
+
         let half = len / 2;
-        Self{
-            re: <T as Fill<U>>::from_slice(&v[..half]), 
-            im: <T as Fill<U>>::from_slice(&v[half..len])
+        Self {
+            re: <T as Fill<U>>::from_slice(&v[..half]),
+            im: <T as Fill<U>>::from_slice(&v[half..len]),
         }
     }
-    
+
     fn from_vec(v: Vec<U>) -> Self {
         let len = v.len();
-        
+
         let half = len / 2;
-        Self{
-            re: <T as Fill<U>>::from_vec(v[..half].to_vec()), 
-            im: <T as Fill<U>>::from_vec(v[half..len].to_vec())
+        Self {
+            re: <T as Fill<U>>::from_vec(v[..half].to_vec()),
+            im: <T as Fill<U>>::from_vec(v[half..len].to_vec()),
         }
     }
 }

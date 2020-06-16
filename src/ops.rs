@@ -178,45 +178,97 @@ where
     }
 }
 
-trait InvReal {
-    fn inv_real(&self) -> Self;
-}
+mod inv_real{
+    use super::*;
+    
+    pub trait InvReal {
+        fn inv_real(&self) -> Self;
+    }
 
-impl<T> InvReal for Complex<T> 
-where
-    T: InvReal + Copy,
-{
-    fn inv_real(&self) -> Self {
-        Self {
-            re: self.re.inv_real(),
-            im: self.im,
+    impl<T> InvReal for Complex<T>
+    where
+        T: InvReal + Copy,
+    {
+        fn inv_real(&self) -> Self {
+            Self {
+                re: self.re.inv_real(),
+                im: self.im,
+            }
         }
     }
-}
 
-macro_rules! impl_inv_real_for_float {
-    ($($ty:ty),* ) => {
-        $(
-            impl InvReal for $ty {
-                fn inv_real(&self) -> Self {
-                    1. / self 
+    macro_rules! impl_inv_real_for_float {
+        ($($ty:ty),* ) => {
+            $(
+                impl InvReal for $ty {
+                    fn inv_real(&self) -> Self {
+                        1. / self
+                    }
                 }
-            }
-        )*
+            )*
+        }
     }
-}
 
-impl_inv_real_for_float!(f32, f64);
+    impl_inv_real_for_float!(f32, f64);
+}
 
 forward_ref_bin_op!(Div, div, Complex<T>, Complex<T>, T);
 impl<T> Div for Complex<T>
 where
-    Complex<T>: Conjugate + Mul<Output = Complex<T>> + InvReal + Copy,
+    Complex<T>: Conjugate + Mul<Output = Complex<T>> + inv_real::InvReal + Copy,
 {
     type Output = Self;
     fn div(self, other: Self) -> Self::Output {
         let other_mod_sq = other * other.conj();
-        self * other.conj() * other_mod_sq.inv_real()
+        self * other.conj() * <Complex<T> as inv_real::InvReal>::inv_real(&other_mod_sq)
+    }
+}
+
+impl<T> Sum for Complex<T>
+where
+    Complex<T>: Identity + Add<Output = Complex<T>>,
+{
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Self>,
+    {
+        iter.fold(Self::zero(), Add::add)
+    }
+}
+
+impl<'a, T: 'a> Sum<&'a Complex<T>> for Complex<T>
+where
+    Complex<T>: Identity + Add<Output = Complex<T>> + Copy,
+{
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = &'a Self>,
+    {
+        iter.map(|x| *x).sum::<Self>()
+    }
+}
+
+impl<T> Product for Complex<T>
+where
+    Complex<T>: Identity + Mul<Output = Complex<T>>,
+{
+    fn product<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Self>,
+    {
+        iter.fold(Self::one(), Mul::mul)
+    }
+}
+
+impl<'a, T: 'a> Product<&'a Complex<T>> for Complex<T>
+where
+    Complex<T>: Identity + Mul<Output = Complex<T>> + Copy,
+{
+    fn product<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = &'a Self>,
+    {
+        iter.map(|x| *x).product::<Self>()
     }
 }
 
@@ -333,54 +385,6 @@ macro_rules! impl_algebra_with_reals {
                 }
             }
 
-            // impl<T> Sum for Complex<T>
-            // where
-                // Complex<T>: Fill<$ty> + Add<Output = Complex<T>>,
-            // {
-                // fn sum<I>(iter: I) -> Self
-                // where
-                    // I: Iterator<Item = Self>,
-                // {
-                    // iter.fold(Self::zero(), Add::add)
-                // }
-            // }
-
-            // impl<'a, T: 'a> Sum<&'a Complex<T>> for Complex<T>
-            // where
-                // Complex<T>: Fill<$ty> + Add<Output = Complex<T>> + Copy,
-            // {
-                // fn sum<I>(iter: I) -> Self
-                // where
-                    // I: Iterator<Item = &'a Self>,
-                // {
-                    // iter.map(|x| *x).sum::<Self>()
-                // }
-            // }
-
-            // impl<T> Product for Complex<T>
-            // where
-                // Complex<T>: Fill<$ty> + Mul<Output = Complex<T>>,
-            // {
-                // fn product<I>(iter: I) -> Self
-                // where
-                    // I: Iterator<Item = Self>,
-                // {
-                    // iter.fold(Self::one(), Mul::mul)
-                // }
-            // }
-
-            // impl<'a, T: 'a> Product<&'a Complex<T>> for Complex<T>
-            // where
-                // Complex<T>: Fill<$ty> + Mul<Output = Complex<T>> + Copy,
-            // {
-                // fn product<I>(iter: I) -> Self
-                // where
-                    // I: Iterator<Item = &'a Self>,
-                // {
-                    // iter.map(|x| *x).product::<Self>()
-                // }
-            // }
-
             bin_op_assign!(AddAssign, add_assign, Add, add, Complex<T>, $ty, T);
             bin_op_assign!(SubAssign, sub_assign, Sub, sub, Complex<T>, $ty, T);
             bin_op_assign!(MulAssign, mul_assign, Mul, mul, Complex<T>, $ty, T);
@@ -388,7 +392,6 @@ macro_rules! impl_algebra_with_reals {
         )*
     }
 }
-
 
 bin_op_assign!(AddAssign, add_assign, Add, add, Complex<T>, Complex<T>, T);
 bin_op_assign!(SubAssign, sub_assign, Sub, sub, Complex<T>, Complex<T>, T);

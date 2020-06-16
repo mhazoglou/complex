@@ -1,13 +1,17 @@
 use complex::*;
 
 fn main() {
+    println!("{}", 2.0_f64.exp());
     let z = Complex::new(8.0_f64, 2.0_f64);
     let z2 = complex![2., 1.];
-    let z3 =  (z / z2);//.floor();
+    let z3 = z / z2;
     println!("ratio: {}", z3);
     let z_star = z.conj();
     let v = vec![z; 3];
-    let vec = vec![1., 2., 3., 4., 5., 6., 7., 8., 1., 2., 3., 4., 5., 6., 7., 8.];
+    let vec = vec![
+        1., 2., 3., 4., 5., 6., 7., 8., 
+        1., 2., 3., 4., 5., 6., 7., 8.,
+    ];
     let sede = Sedenionf64::from_slice(&vec[..]);
     let sede2 = Sedenionf64::from_vec(vec);
     assert_eq!(sede, sede2);
@@ -20,7 +24,10 @@ fn main() {
     println!("{}", z.powu(3));
     println!("{}", z.powi(-3));
     println!("{}", z.powf(3.0));
-    // println!("{}", v.iter().sum::<Complex<f64>>());
+    println!(
+        "Sum works on complex types too: {}",
+        v.iter().sum::<Complex<f64>>()
+    );
 
     println!("{}", z * z_star);
     println!("{}", z.abs_sq());
@@ -68,9 +75,14 @@ fn main() {
     // if the number of values is a power of 2
     let z_z_top = complex![-1.0_f64, -5_f64];
     println!("{}", z_z_top);
-    let quaternion = complex![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64];
+    let quaternion = complex![
+        1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64
+    ];
     println!("{}", quaternion);
-    let octonion = complex![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64, 6.0_f64, 7.0_f64, 8.0_f64];
+    let octonion = complex![
+        1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 
+        5.0_f64, 6.0_f64, 7.0_f64, 8.0_f64
+    ];
     println!("{}", octonion);
     let polar_octo = octonion.ln();
     println!("Logarithm");
