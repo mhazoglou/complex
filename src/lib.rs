@@ -1,9 +1,29 @@
+//! # complex
+//! 
+//! `complex` is a crate implementing Cayley-Dickson construction and algebra
+//! for hypercomplex numbers through a recursive construction. This crate 
+//! allows any hypercomplex numbers to be manipulated with 
 use std::iter::{Product, Sum};
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, 
+               Mul, MulAssign, Neg, Sub, SubAssign};
 
 pub mod fmt;
 pub mod ops;
 
+/// Generates a corresponding `Complex<T>` from floating point numbers either
+/// `f32` or `f64` in groupings of powers of the number two.
+///
+/// # Example
+/// 
+/// ```
+/// use complex::*;
+///
+/// let quaternion = complex![1., 2., 3., 4.];
+/// let z1 = Complex::<f64>::new(1., 2.);
+/// let z2 = Complex::<f64>::new(3., 4.);
+///
+/// assert_eq!(quaternion, Complex::<Complex<f64>>::new(z1, z2));
+/// ```
 #[macro_export]
 macro_rules! complex{
     ( $x:expr, $y:expr ) => {
@@ -22,18 +42,31 @@ macro_rules! complex{
     };
 }
 
+/// An alias for `Complex<f64>`, implements complex numbers with `f64`.
 pub type Complexf64 = Complex<f64>;
+/// An alias for `Complex<Complex<f64>>`, implements quaternions with `f64`.
 pub type Quaternionf64 = Complex<Complex<f64>>;
+/// An alias for `Complex<Complex<Complex<f64>>>`, implements octonions with `f64`.
 pub type Octonionf64 = Complex<Complex<Complex<f64>>>;
+/// An alias for `Complex<Complex<Complex<Complex<f64>>>>` implements sedenions with 'f64'.
 pub type Sedenionf64 = Complex<Complex<Complex<Complex<f64>>>>;
+/// An alias for `Complex<Complex<Complex<Complex<Complex<f64>>>>>` implements trigintaduonion with `f64`.
 pub type Trigintaduonionf64 = Complex<Complex<Complex<Complex<Complex<f64>>>>>;
 
+/// An alias for `Complex<f32>`, implements complex numbers with `f32`.
 pub type Complexf32 = Complex<f32>;
+/// An alias for `Complex<Complex<f32>>`, implements quaternions with `f32`.
 pub type Quaternionf32 = Complex<Complex<f32>>;
+/// An alias for `Complex<Complex<Complex<f32>>>`, implements octonions with `f32`.
 pub type Octonionf32 = Complex<Complex<Complex<f32>>>;
+/// An alias for `Complex<Complex<Complex<Complex<f32>>>>` implements sedenions with 'f32'.
 pub type Sedenionf32 = Complex<Complex<Complex<Complex<f32>>>>;
+/// An alias for `Complex<Complex<Complex<Complex<Complex<f32>>>>>` implements trigintaduonion with `f32`.
 pub type Trigintaduonionf32 = Complex<Complex<Complex<Complex<Complex<f32>>>>>;
 
+/// Base struct that all complex and hypercomplex types are based off of
+/// recursively putting `Complex<T>` within itself for other hypercomplex types
+/// like `Complex<Complex<...>>`.
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Complex<T> {
     pub re: T,
@@ -44,14 +77,33 @@ impl<T> Complex<T>
 where
     T: Conjugate + Copy,
 {
+    /// Method for creating a new `Complex<T>` instance.
+    ///
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    ///
+    /// let z1 = Complex::<f64>::new(1., 2.);
+    /// let z2 = Complex::<f64> {
+    ///     re: 1.,
+    ///     im: 2.
+    /// };
+    ///
+    /// assert_eq!(z1, z2);
+    /// ```
     pub fn new(re: T, im: T) -> Self {
         Self { re, im }
     }
 }
 
+/// Implements several common functions for complex and hypercomplex types.
 pub trait Functions<U, V> {
+    /// Returns the exponent of a number.
     fn exp(&self) -> Self;
+    /// Returns the natural logarithm of a number.
     fn ln(&self) -> Self;
+    /// Calculate a complex number to the power of a floating point.
     fn powf(&self, num: U) -> Self;
     fn powz(&self, num: V) -> V;
     fn powu_tail(&self, num: u32, acc: Self) -> Self;
@@ -189,11 +241,15 @@ macro_rules! impl_functions_for_float {
 
 impl_functions_for_float!(f32, f64);
 
+/// Gives the additive (zero) and multiplicative (one) identity of the respective 
+/// complex and hypercomplex types.
 pub trait Identity {
     fn zero() -> Self;
     fn one() -> Self;
 }
 
+/// Gives static methods for creating complex and hypercomplex types from arrays
+/// and vectors as well as simply fill all values with a single number.
 pub trait Fill<U>: Identity {
     fn fill(num: U) -> Self;
     fn from_slice(v: &[U]) -> Self;
@@ -292,6 +348,7 @@ where
     }
 }
 
+/// Conjugates any complex or hypercomplex number.
 pub trait Conjugate {
     fn conj(&self) -> Self;
 }
@@ -322,6 +379,7 @@ where
     }
 }
 
+/// Returns the modulus square of an instance of a complex or hypercomplex type.
 pub trait AbsSq<U> {
     fn abs_sq(&self) -> U;
 }
@@ -349,6 +407,7 @@ macro_rules! impl_abs_sq_for {
 
 impl_abs_sq_for!(f32, f64);
 
+/// Returns the real part of any complex and hypercomplex type.
 pub trait Real<U> {
     fn real(&self) -> U;
 }

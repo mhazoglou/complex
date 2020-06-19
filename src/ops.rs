@@ -1,3 +1,5 @@
+//! All basic algebraic operations are implemented for complex and hypercomplex
+//! types using Cayley-Dickson construction and recursive calls
 use crate::*;
 
 macro_rules! forward_ref_un_op {

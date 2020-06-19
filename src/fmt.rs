@@ -1,3 +1,5 @@
+//! Includes implementions of string conversion, printing and parsing 
+//! for complex and hypercomplex types.
 use crate::*;
 use regex::Regex;
 use std::any::type_name;
