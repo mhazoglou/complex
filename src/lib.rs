@@ -118,27 +118,31 @@ macro_rules! impl_functions_for_float {
             where Complex<T>: Mul<$u, Output=Complex<T>> + Functions<$u, Complex<T>>,
             {
                 fn exp(&self) -> Self {
-                    self.exp()
+                    Self::exp(*self)
                 }
 
                 fn ln(&self) -> Self {
-                    self.ln()
+                    Self::ln(*self)
                 }
 
                 fn powf(&self, num: Self) -> Self {
-                    self.powf(num)
+                    Self::powf(*self, num)
                 }
 
                 fn powz(&self, num: Complex<T>) -> Complex<T> {
-                    (num * self.ln()).exp()
+                    (num * Self::ln(*self)).exp()
                 }
 
                 fn powu_tail(&self, num: u32, acc: Self) -> Self {
                     if num == 0 {
                         return acc;
+                    } else if (num % 2) == 0 {
+                        let sq = self * self;
+                        return <Self as Functions<$u, Complex<T>>>::powu_tail(&sq, num / 2, acc);
+                    } else {
+                        let sq = self * self;
+                        return <Self as Functions<$u, Complex<T>>>::powu_tail(&sq, (num - 1) / 2, self * acc);
                     }
-
-                    <Self as Functions<$u, Complex<T>>>::powu_tail(self, num - 1, self * acc)
                 }
 
                 fn powu(&self, num: u32) -> Self {
@@ -146,7 +150,7 @@ macro_rules! impl_functions_for_float {
                 }
 
                 fn powi(&self, num: i32) -> Self {
-                    self.powi(num)
+                    Self::powi(*self, num)
                 }
             }
 
@@ -217,7 +221,11 @@ macro_rules! impl_functions_for_float {
                         return acc;
                     }
 
-                    <Self as Functions<$u, Complex<T>>>::powu_tail(self, num - 1, self * acc)
+                    <Self as Functions<$u, Complex<T>>>::powu_tail(
+                        self, 
+                        num - 1, 
+                        self * acc
+                    )
                 }
 
                 fn powu(&self, num: u32) -> Self {
@@ -240,6 +248,85 @@ macro_rules! impl_functions_for_float {
 }
 
 impl_functions_for_float!(f32, f64);
+
+pub trait Rounding {
+    fn floor(&self) -> Self;
+    fn ceil(&self) -> Self;
+    fn round(&self) -> Self;
+    fn trunc(&self) -> Self;
+    fn fract(&self) -> Self;
+}
+
+macro_rules! impl_rounding_for_float {
+    ($($u:ty),* ) => {
+        $(
+            impl Rounding for $u
+            {
+                fn floor(&self) -> Self {
+                    Self::floor(*self)
+                }
+
+                fn ceil(&self) -> Self {
+                    Self::ceil(*self)
+                }
+
+                fn round(&self) -> Self {
+                    Self::round(*self)
+                }
+
+                fn trunc(&self) -> Self {
+                    Self::trunc(*self)
+                }
+
+                fn fract(&self) -> Self {
+                    Self::fract(*self)
+                }
+            }
+        )*
+    }
+}
+
+impl_rounding_for_float!(f32, f64);
+
+impl<T> Rounding for Complex<T>
+where
+    T: Rounding + Copy,
+{
+    fn floor(&self) -> Self {
+        Self {
+            re: <T as Rounding>::floor(&self.re),
+            im: <T as Rounding>::floor(&self.im)
+        }
+    }
+
+    fn ceil(&self) -> Self {
+        Self {
+            re: <T as Rounding>::ceil(&self.re),
+            im: <T as Rounding>::ceil(&self.im)
+        }
+    }
+
+    fn round(&self) -> Self {
+        Self {
+            re: <T as Rounding>::round(&self.re),
+            im: <T as Rounding>::round(&self.im)
+        }
+    }
+
+    fn trunc(&self) -> Self {
+        Self {
+            re: <T as Rounding>::trunc(&self.re),
+            im: <T as Rounding>::trunc(&self.im)
+        }
+    }
+
+    fn fract(&self) -> Self {
+        Self {
+            re: <T as Rounding>::fract(&self.re),
+            im: <T as Rounding>::fract(&self.im)
+        }
+    }
+}
 
 /// Gives the additive (zero) and multiplicative (one) identity of the respective 
 /// complex and hypercomplex types.
