@@ -219,13 +219,17 @@ macro_rules! impl_functions_for_float {
                 fn powu_tail(&self, num: u32, acc: Self) -> Self {
                     if num == 0 {
                         return acc;
+                    } else if (num % 2) == 0 {
+                        let sq = self * self;
+                        return <Self as Functions<$u, Complex<T>>>::powu_tail(
+                            &sq, num / 2, acc
+                        );
+                    } else {
+                        let sq = self * self;
+                        return <Self as Functions<$u, Complex<T>>>::powu_tail(
+                            &sq, (num - 1) / 2, self * acc
+                        );
                     }
-
-                    <Self as Functions<$u, Complex<T>>>::powu_tail(
-                        self, 
-                        num - 1, 
-                        self * acc
-                    )
                 }
 
                 fn powu(&self, num: u32) -> Self {
