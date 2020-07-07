@@ -4,8 +4,12 @@
 //! for hypercomplex numbers through a recursive construction. This crate 
 //! allows any hypercomplex numbers to be manipulated with 
 use std::iter::{Product, Sum};
-use std::ops::{Add, AddAssign, Div, DivAssign, 
-               Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, 
+               Div, DivAssign, 
+               Mul, MulAssign, 
+               Sub, SubAssign,
+               Neg, 
+               Rem, RemAssign};
 
 pub mod fmt;
 pub mod ops;

@@ -108,6 +108,36 @@ fn test_exp_complexf32() {
 }
 
 #[test]
+fn test_rem_two_complexf32() {
+    let z1 = Complex::<f32>::new(8., 2.);
+    let z2 = Complex::<f32>::new(2., 1.);
+    assert_eq!(z1 % z2, Complex::<f32>::new(2., -1.));
+    assert_eq!(&z1 % z2, Complex::<f32>::new(2., -1.));
+    assert_eq!(z1 % &z2, Complex::<f32>::new(2., -1.));
+    assert_eq!(&z1 % &z2, Complex::<f32>::new(2., -1.));
+}
+
+#[test]
+fn test_rem_complexf32_and_f32() {
+    let z1 = Complex::<f32>::new(8., 2.);
+    let z2 = Complex::<f32>::new(2., 0.);
+    assert_eq!(z1 % z2, z1 % 2.);
+    assert_eq!(&z1 % z2, z1 % 2.);
+    assert_eq!(z1 % &z2, z1 % 2.);
+    assert_eq!(&z1 % &z2, z1 % 2.);
+}
+
+#[test]
+fn test_rem_f32_and_complexf32() {
+    let z1 = Complex::<f32>::new(8., 2.);
+    let z2 = Complex::<f32>::new(2., 0.);
+    assert_eq!(z2 % z1, 2. % z1);
+    assert_eq!(&z2 % z1, 2. % z1);
+    assert_eq!(z2 % &z1, 2. % z1);
+    assert_eq!(&z2 % &z1, 2. % z1);
+}
+
+#[test]
 fn test_add_two_quaternionsf32() {
     let z1 = complex![1., 2., 3., 4.];
     let z2 = complex![2., 3., 4., 5.];

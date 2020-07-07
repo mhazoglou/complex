@@ -5,7 +5,8 @@ fn main() {
     let z = Complex::new(8.0_f64, 2.0_f64);
     let z2 = complex![2., 1.];
     let z3 = z / z2;
-    let z4 = z - z2 * z3.round();
+    let z4 = z % z2;
+    println!("{}", z - z2 * z3.trunc());
     println!("ratio: {}", z4);
     let z_star = z.conj();
     let v = vec![z; 3];
