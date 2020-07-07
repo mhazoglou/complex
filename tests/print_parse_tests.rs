@@ -29,6 +29,8 @@ fn test_parse_complexf32_err() {
         Ok(num) => num,
         Err(_err) => panic!("Didn't parse complex number correctly"),
     };
+
+    assert_eq!(z, Complex::new(4.0_f32, 1.0_f32));
 }
 
 #[test]
@@ -48,6 +50,8 @@ fn test_parse_complexf64_err() {
         Ok(num) => num,
         Err(_err) => panic!("Didn't parse complex number correctly"),
     };
+
+    assert_eq!(z, Complex::new(4.0_f64, 1.0_f64));
 }
 
 #[test]

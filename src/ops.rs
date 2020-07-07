@@ -429,6 +429,7 @@ macro_rules! impl_algebra_with_reals {
             bin_op_assign!(SubAssign, sub_assign, Sub, sub, Complex<T>, $ty, T);
             bin_op_assign!(MulAssign, mul_assign, Mul, mul, Complex<T>, $ty, T);
             bin_op_assign!(DivAssign, div_assign, Div, div, Complex<T>, $ty, T);
+            bin_op_assign!(RemAssign, rem_assign, Rem, rem, Complex<T>, $ty, T);
         )*
     }
 }
