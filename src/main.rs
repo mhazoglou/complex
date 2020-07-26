@@ -3,6 +3,8 @@ use complex::*;
 fn main() {
     println!("{}", 2.0_f64.exp());
     let z = Complex::new(8.0_f64, 2.0_f64);
+    let zomg = z.sin();
+    println!("Zoh my god: {}", zomg);
     let z2 = complex![2., 1.];
     let z3 = z / z2;
     let z4 = z % z2;
@@ -91,4 +93,7 @@ fn main() {
     println!("{}", polar_octo);
     println!("exp(polar_octo)");
     println!("{}", polar_octo.exp());
+    
+    let poop = Sedenionf64::i();
+    println!("IMAGINARIES YEAH: {}", poop);
 }

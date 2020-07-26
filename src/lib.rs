@@ -2,7 +2,9 @@
 //! 
 //! `complex` is a crate implementing Cayley-Dickson construction and algebra
 //! for hypercomplex numbers through a recursive construction. This crate 
-//! allows any hypercomplex numbers to be manipulated with 
+//! allows any hypercomplex numbers to be manipulated with standard operators
+//! in a convenient manner.
+use std::any::type_name;
 use std::iter::{Product, Sum};
 use std::ops::{Add, AddAssign, 
                Div, DivAssign, 
@@ -70,7 +72,8 @@ pub type Trigintaduonionf32 = Complex<Complex<Complex<Complex<Complex<f32>>>>>;
 
 /// Base struct that all complex and hypercomplex types are based off of
 /// recursively putting `Complex<T>` within itself for other hypercomplex types
-/// like `Complex<Complex<...>>`.
+/// like `Complex<Complex<...>>`. `Complex<T>` can only be built out from f32 
+/// and f64 at the very root of the structure.
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Complex<T> {
     pub re: T,
@@ -113,6 +116,12 @@ pub trait Functions<U, V> {
     fn powu_tail(&self, num: u32, acc: Self) -> Self;
     fn powu(&self, num: u32) -> Self;
     fn powi(&self, num: i32) -> Self;
+    fn sinh(&self) -> Self;
+    fn cosh(&self) -> Self;
+    fn tanh(&self) -> Self;
+    fn sin(&self) -> Self;
+    fn cos(&self) -> Self;
+    fn tan(&self) -> Self;
 }
 
 macro_rules! impl_functions_for_float {
@@ -156,6 +165,30 @@ macro_rules! impl_functions_for_float {
                 fn powi(&self, num: i32) -> Self {
                     Self::powi(*self, num)
                 }
+                
+                fn sinh(&self) -> Self {
+                    Self::sinh(*self)
+                }
+                
+                fn cosh(&self) -> Self {
+                    Self::cosh(*self)
+                }
+                
+                fn tanh(&self) -> Self {
+                    Self::tanh(*self)
+                }
+                
+                fn sin(&self) -> Self {
+                    Self::sin(*self)
+                }
+                
+                fn cos(&self) -> Self {
+                    Self::cos(*self)
+                }
+                
+                fn tan(&self) -> Self {
+                    Self::tan(*self)
+                }
             }
 
             impl<T> Functions<$u, Complex<T>> for Complex<T>
@@ -174,6 +207,10 @@ macro_rules! impl_functions_for_float {
                     + Div<Output = T>
                     + Div<$u, Output = T>
                     + Neg<Output = T>,
+                Complex<T>: 
+                    Div<Output = Complex<T>>
+                    + Div<$u, Output = Complex<T>>
+                    + ImaginaryConstants,
             {
                 fn exp(&self) -> Self {
                     let real = self.real();
@@ -250,6 +287,45 @@ macro_rules! impl_functions_for_float {
                         self.powu(num as u32)
                     }
                 }
+                
+                fn sinh(&self) -> Self {
+                    let exp = self.exp();
+                    
+                    (exp - 1. / exp) * 0.5 
+                }
+                
+                fn cosh(&self) -> Self {
+                    let exp = self.exp();
+                    
+                    (exp + 1. / exp) * 0.5 
+                }
+                
+                fn tanh(&self) -> Self {
+                    let exp = self.exp();
+                    
+                    (exp * exp - 1.) / (exp * exp + 1.)
+                }
+                
+                fn sin(&self) -> Self {
+                    let i = <Self as ImaginaryConstants>::i();
+                    let expiz = (i * *self).exp();
+                    
+                    (expiz - 1. / expiz) *  0.5 * -i
+                }
+                
+                fn cos(&self) -> Self {
+                    let i = <Self as ImaginaryConstants>::i();
+                    let expiz = (i * *self).exp();
+                    
+                    (expiz + 1. / expiz) * 0.5
+                }
+                
+                fn tan(&self) -> Self {
+                    let i = <Self as ImaginaryConstants>::i();
+                    let expiz = (i * *self).exp();
+                    
+                    (expiz * expiz - 1.) / (i * expiz * expiz + i)
+                }
             }
         )*
     }
@@ -257,6 +333,7 @@ macro_rules! impl_functions_for_float {
 
 impl_functions_for_float!(f32, f64);
 
+/// Elementwise rounding and truncation functions
 pub trait Rounding {
     fn floor(&self) -> Self;
     fn ceil(&self) -> Self;
@@ -343,14 +420,6 @@ pub trait Identity {
     fn one() -> Self;
 }
 
-/// Gives static methods for creating complex and hypercomplex types from arrays
-/// and vectors as well as simply fill all values with a single number.
-pub trait Fill<U>: Identity {
-    fn fill(num: U) -> Self;
-    fn from_slice(v: &[U]) -> Self;
-    fn from_vec(v: Vec<U>) -> Self;
-}
-
 macro_rules! impl_identity_for_float {
     ( $($u:ty),* ) => {
         $(
@@ -368,6 +437,119 @@ macro_rules! impl_identity_for_float {
 }
 
 impl_identity_for_float!(f32, f64);
+
+impl<T> Identity for Complex<T>
+where
+    T: Identity,
+{
+    fn zero() -> Self {
+        Self {
+            re: <T as Identity>::zero(),
+            im: <T as Identity>::zero(),
+        }
+    }
+
+    fn one() -> Self {
+        Self {
+            re: <T as Identity>::one(),
+            im: <T as Identity>::zero(),
+        }
+    }
+}
+
+pub trait ImaginaryConstants {
+    fn i() -> Self;
+    fn j() -> Self;
+    fn k() -> Self;
+}
+
+macro_rules! impl_img_const_for_float {
+    ( $($u:ty),* ) => {
+        $(
+            impl ImaginaryConstants for $u {
+                fn i() -> Self {
+                    0.
+                }
+                
+                fn j() -> Self {
+                    0.
+                }
+                
+                fn k() -> Self {
+                    0.
+                }
+            }
+        )*
+    };
+}
+
+impl_img_const_for_float!(f32, f64);
+impl<T> ImaginaryConstants for Complex<T> 
+where
+    T: Identity + ImaginaryConstants
+{
+    fn i() -> Self {
+        if (type_name::<T>() == "f64") || (type_name::<T>() == "f32") {
+            return Self {
+                re: <T as Identity>::zero(),
+                im: <T as Identity>::one()
+            };
+        } else {
+            return Self {
+                re: <T as ImaginaryConstants>::i(),
+                im: <T as Identity>::zero()
+            };
+        }
+    }
+    
+    fn j() -> Self {
+        if (type_name::<T>() == "f64") || (type_name::<T>() == "f32") {
+            return Self {
+                re: <T as Identity>::zero(),
+                im: <T as Identity>::one()
+            };
+        } else if (type_name::<T>() == type_name::<Complexf64>()) || 
+            (type_name::<T>() == type_name::<Complexf32>()) {
+            return Self {
+                re: <T as Identity>::zero(),
+                im: <T as Identity>::one()
+            };
+        } else {
+            return Self {
+                re: <T as ImaginaryConstants>::j(),
+                im: <T as Identity>::zero()
+            }
+        }
+    }
+    
+    fn k() -> Self {
+        if (type_name::<T>() == "f64") || (type_name::<T>() == "f32") {
+            return Self {
+                re: <T as Identity>::zero(),
+                im: <T as Identity>::one()
+            };
+        } else if (type_name::<T>() == type_name::<Complexf64>()) || 
+            (type_name::<T>() == type_name::<Complexf32>()) {
+            return Self {
+                re: <T as Identity>::zero(),
+                im: <T as ImaginaryConstants>::k()
+            };
+        } else {
+            return Self {
+                re: <T as ImaginaryConstants>::k(),
+                im: <T as Identity>::zero()
+            }
+        }
+    }
+}
+
+/// Gives static methods for creating complex and hypercomplex types from arrays
+/// and vectors as well as simply filling all values with a single number.
+pub trait Fill<U>: Identity {
+    fn fill(num: U) -> Self;
+    fn from_slice(v: &[U]) -> Self;
+    fn from_vec(v: Vec<U>) -> Self;
+}
 
 macro_rules! impl_fill_for_float {
     ( $($u:ty),* ) => {
@@ -390,25 +572,6 @@ macro_rules! impl_fill_for_float {
 }
 
 impl_fill_for_float!(f32, f64);
-
-impl<T> Identity for Complex<T>
-where
-    T: Identity,
-{
-    fn zero() -> Self {
-        Self {
-            re: <T as Identity>::zero(),
-            im: <T as Identity>::zero(),
-        }
-    }
-
-    fn one() -> Self {
-        Self {
-            re: <T as Identity>::one(),
-            im: <T as Identity>::zero(),
-        }
-    }
-}
 
 impl<T, U> Fill<U> for Complex<T>
 where
