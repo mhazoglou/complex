@@ -499,10 +499,69 @@ impl_functions_for_float!(f32, f64);
 
 /// Elementwise rounding and truncation functions
 pub trait Rounding {
+    /// Returns the floor of all components of a hypercomplex type. The 
+    /// floor is the largest integer less than or equal to a number.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    ///
+    /// let z = complex![1.3, 4.5];
+    /// 
+    /// assert_eq!(z.floor(), complex![1.0, 4.0]);
+    /// ```
     fn floor(&self) -> Self;
+    /// Returns the ceiling of all components of a hypercomplex type. The 
+    /// ceiling is the smallest integer less than or equal to a number.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    ///
+    /// let z = complex![1.3, 4.5];
+    /// 
+    /// assert_eq!(z.ceil(), complex![2.0, 5.0]);
+    /// ```
     fn ceil(&self) -> Self;
+    /// Returns the rounded form of all components of a hypercomplex type. The
+    /// round function returns the nearest integer to a number. Round half-way
+    /// cases away from 0.0.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    ///
+    /// let z = complex![1.3, 4.5, -1.3, -4.5];
+    /// 
+    /// assert_eq!(z.round(), complex![1.0, 5.0, -1.0, -5.0]);
+    /// ```
     fn round(&self) -> Self;
+    /// Returns the integer part of all components of a hypercomplex type.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    ///
+    /// let z = complex![1.3, 4.5];
+    /// 
+    /// assert_eq!(z.trunc(), complex![1.0, 4.0]);
+    /// ```
     fn trunc(&self) -> Self;
+    /// Returns the fractional part of all components of a hypercomplex type.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    ///
+    /// let z = complex![1.5, 4.5];
+    /// 
+    /// assert_eq!(z.fract(), complex![0.5, 0.5]);
+    /// ```
     fn fract(&self) -> Self;
 }
 
