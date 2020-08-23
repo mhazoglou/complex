@@ -117,7 +117,7 @@ pub trait Functions<U, V> {
     /// let z = complex![0.0, PI];
     /// let expz = z.exp();
     ///
-    /// assert_eq!(expz, complex![PI.cos(), PI.sin()]) 
+    /// assert_eq!(expz, complex![PI.cos(), PI.sin()]);
     /// ```
     fn exp(&self) -> Self;
     /// Returns the natural logarithm of a hypercomplex number. It's unique
@@ -132,7 +132,7 @@ pub trait Functions<U, V> {
     /// let z = complex![-1.0, 0.0];
     /// let lnz = z.ln();
     ///
-    /// assert!((lnz - complex![0.0, 0.0]).abs_sq() < 1e-10) 
+    /// assert!((lnz - complex![0.0, 0.0]).abs_sq() < 1e-10);
     /// ```
     fn ln(&self) -> Self;
     /// Calculate a hypercomplex number to the power of a floating point.
@@ -145,7 +145,7 @@ pub trait Functions<U, V> {
     /// let z = complex![0.0, 1.0];
     /// let w = z.powf(3.0);
     ///
-    /// assert!((w - complex![0.0, -1.0]).abs_sq() < 1e-10) 
+    /// assert!((w - complex![0.0, -1.0]).abs_sq() < 1e-10);
     /// ```
     fn powf(&self, num: U) -> Self;
     /// Calculate a hypercomplex number or float to power of a hypercomplex number.
@@ -159,7 +159,7 @@ pub trait Functions<U, V> {
     /// let z = complex![0.0, 1.0];
     /// let w = z.powz(z);
     /// 
-    /// assert_eq!(w, (-PI / 2.).exp() * Complex::<f64>::one())
+    /// assert_eq!(w, (-PI / 2.).exp() * Complex::<f64>::one());
     /// ```
     fn powz(&self, num: V) -> V;
     /// Tail recursive function for calculating repeated products of hypercomplex numbers.
@@ -172,7 +172,7 @@ pub trait Functions<U, V> {
     /// let z = complex![0.0, 1.0];
     /// let w = z.powu_tail(3, Complex::<f64>::one());
     ///
-    /// assert_eq!(w, complex![0.0, -1.0]) 
+    /// assert_eq!(w, complex![0.0, -1.0]);
     /// ```
     fn powu_tail(&self, num: u32, acc: Self) -> Self;
     /// Calculates the power of a hypercomplex number to a power of an unsigned integer.
@@ -185,7 +185,7 @@ pub trait Functions<U, V> {
     /// let z = complex![0.0, 1.0];
     /// let w = z.powu(3);
     ///
-    /// assert_eq!(w, complex![0.0, -1.0]) 
+    /// assert_eq!(w, complex![0.0, -1.0]);
     /// ```
     fn powu(&self, num: u32) -> Self;
     /// Calculates the power of a hypercomplex number to a power of an signed integer.
@@ -198,7 +198,7 @@ pub trait Functions<U, V> {
     /// let z = complex![0.0, 1.0];
     /// let w = z.powi(-3);
     ///
-    /// assert_eq!(w, complex![0.0, 1.0]) 
+    /// assert_eq!(w, complex![0.0, 1.0]);
     /// ```
     fn powi(&self, num: i32) -> Self;
     /// Returns the hyperbolic sine of a hypercomplex number.
@@ -212,7 +212,7 @@ pub trait Functions<U, V> {
     /// let z = complex![0., PI];
     /// let w = z.sinh();
     /// 
-    /// assert_eq!(w, Complex::<f64>::i() * PI.sin())
+    /// assert_eq!(w, Complex::<f64>::i() * PI.sin());
     /// ```
     fn sinh(&self) -> Self;
     /// Returns the hyperbolic cosine of a hypercomplex number.
@@ -226,7 +226,7 @@ pub trait Functions<U, V> {
     /// let z = complex![0., PI];
     /// let w = z.cosh();
     /// 
-    /// assert_eq!(w, Complex::<f64>::one() * PI.cos())
+    /// assert_eq!(w, Complex::<f64>::one() * PI.cos());
     /// ```
     fn cosh(&self) -> Self;
     /// Returns the hyperbolic tangent of a hypercomplex number.
@@ -240,7 +240,7 @@ pub trait Functions<U, V> {
     /// let z = complex![0., PI];
     /// let w = z.tanh();
     /// 
-    /// assert!((w - Complex::<f64>::i() * PI.tan()).abs_sq() < 1e-10)
+    /// assert!((w - Complex::<f64>::i() * PI.tan()).abs_sq() < 1e-10);
     /// ```
     fn tanh(&self) -> Self;
     /// Returns the sine of a hypercomplex number.
@@ -254,7 +254,7 @@ pub trait Functions<U, V> {
     /// let z = complex![0., PI];
     /// let w = z.sin();
     /// 
-    /// assert!((w - Complex::<f64>::i() * PI.sinh()).abs_sq() < 1e-10)
+    /// assert!((w - Complex::<f64>::i() * PI.sinh()).abs_sq() < 1e-10);
     /// ```
     fn sin(&self) -> Self;
     /// Returns the cosine of a hypercomplex number.
@@ -268,7 +268,7 @@ pub trait Functions<U, V> {
     /// let z = complex![0., PI];
     /// let w = z.cos();
     /// 
-    /// assert!((w - Complex::<f64>::one() * PI.cosh()).abs_sq() < 1e-10)
+    /// assert!((w - Complex::<f64>::one() * PI.cosh()).abs_sq() < 1e-10);
     /// ```
     fn cos(&self) -> Self;
     /// Returns the tangent of a hypercomplex number.
@@ -282,7 +282,7 @@ pub trait Functions<U, V> {
     /// let z = complex![0., PI];
     /// let w = z.tan();
     /// 
-    /// assert!((w - Complex::<f64>::i() * PI.tanh()).abs_sq() < 1e-10)
+    /// assert!((w - Complex::<f64>::i() * PI.tanh()).abs_sq() < 1e-10);
     /// ```
     fn tan(&self) -> Self;
 }
@@ -580,7 +580,31 @@ where
 /// Gives the additive (zero) and multiplicative (one) identity of the respective 
 /// complex and hypercomplex types.
 pub trait Identity {
+    /// Generates  additive identity (zero) of any hypercomplex type.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    ///
+    /// let zero = Complex::<Complex<f64>>::zero();
+    /// // right hand side is the same as Quaternionf64::zero()
+    /// 
+    /// assert_eq!(zero, complex![0.0, 0.0, 0.0, 0.0]);
+    /// ```
     fn zero() -> Self;
+    /// Generates multiplicative identity (one) of any hypercomplex type.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    ///
+    /// let one = Complex::<Complex<f64>>::one();
+    /// // right hand side is the same as Quaternionf64::one()
+    /// 
+    /// assert_eq!(one, complex![1.0, 0.0, 0.0, 0.0]);
+    /// ```
     fn one() -> Self;
 }
 
@@ -623,8 +647,48 @@ where
 
 /// Generates imaginaries i, j, k for respective hypercomplex type
 pub trait ImaginaryConstants {
+    /// Generates first unitary imaginary number for any hypercomplex type.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    /// 
+    /// let i = Complex::<Complex<f64>>::i();
+    /// // right hand side is the same as Quaternionf64::i()
+    /// 
+    /// assert_eq!(i, complex![0.0, 1.0, 0.0, 0.0]);
+    /// ```
     fn i() -> Self;
+    /// Generates second unitary imaginary number for any hypercomplex type. 
+    /// If used for `Complex<f64>` or `Complex<f32>` it will return first 
+    /// unitary imaginary. 
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    /// 
+    /// let j = Complex::<Complex<f64>>::j();
+    /// // right hand side is the same as Quaternionf64::j()
+    /// 
+    /// assert_eq!(j, complex![0.0, 0.0, 1.0, 0.0]);
+    /// ```
     fn j() -> Self;
+    /// Generates third unitary imaginary number for any hypercomplex type.
+    /// If used for `Complex<f64>` or `Complex<f32>` it will return first 
+    /// unitary imaginary.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    /// 
+    /// let k = Complex::<Complex<f64>>::k();
+    /// // right hand side is the same as Quaternionf64::k()
+    /// 
+    /// assert_eq!(k, complex![0.0, 0.0, 0.0, 1.0]);
+    /// ```
     fn k() -> Self;
 }
 
@@ -711,8 +775,48 @@ where
 /// Gives static methods for creating complex and hypercomplex types from arrays
 /// and vectors as well as simply filling all values with a single number.
 pub trait Fill<U>: Identity {
+    /// Creates a hypercomplex number with all components equal to the input.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    /// 
+    /// let filled = Complex::<Complex<f64>>::fill(3.0);
+    /// // right hand side is the same as Quaternionf64::fill()
+    /// 
+    /// assert_eq!(filled, complex![3.0, 3.0, 3.0, 3.0]);
+    /// ```
     fn fill(num: U) -> Self;
+    /// Creates a hypercomplex number with all components from a slice.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    /// 
+    /// let filled = Complex::<Complex<f64>>::from_slice(
+    ///     &[3.0, 4.0, 5.0, 6.0]
+    /// );
+    /// // right hand side is the same as Quaternionf64::from_slice()
+    /// 
+    /// assert_eq!(filled, complex![3.0, 4.0, 5.0, 6.0]);
+    /// ```
     fn from_slice(v: &[U]) -> Self;
+    /// Creates a hypercomplex number with all components from a vector.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    /// 
+    /// let filled = Complex::<Complex<f64>>::from_vec(
+    ///     vec![3.0, 4.0, 5.0, 6.0]
+    /// );
+    /// // right hand side is the same as Quaternionf64::from_vec()
+    /// 
+    /// assert_eq!(filled, complex![3.0, 4.0, 5.0, 6.0]);
+    /// ```
     fn from_vec(v: Vec<U>) -> Self;
 }
 
@@ -773,6 +877,17 @@ where
 
 /// Conjugates any complex or hypercomplex number.
 pub trait Conjugate {
+    /// Return the complex conjugate of any complex or hypercomplex number
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use complex::*;
+    /// 
+    /// let z = complex![1.0, 1.2, -1.0, 2.0];
+    /// 
+    /// assert_eq!(z.conj(), complex![1.0, -1.2, 1.0, -2.0]);
+    /// ```
     fn conj(&self) -> Self;
 }
 
@@ -804,6 +919,18 @@ where
 
 /// Returns the modulus square of an instance of a complex or hypercomplex type.
 pub trait AbsSq<U> {
+    /// Return the magnitude square of any complex or hypercomplex number.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use complex::*;
+    /// 
+    /// let z = complex![1.0, 1.2, -1.0, 2.0];
+    /// let mag = 1.0 * 1.0 + 1.2 * 1.2 + 1.0 * 1.0 + 2.0 * 2.0;
+    /// 
+    /// assert_eq!(z.abs_sq(), mag);
+    /// ```
     fn abs_sq(&self) -> U;
 }
 
@@ -832,6 +959,17 @@ impl_abs_sq_for!(f32, f64);
 
 /// Returns the real part of any complex and hypercomplex type.
 pub trait Real<U> {
+    /// Return the real part of any complex or hypercomplex type.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    /// 
+    /// let z = complex![1.0, 3.0];
+    /// 
+    /// assert_eq!(z.real(), 1.0);
+    /// ```
     fn real(&self) -> U;
 }
 
