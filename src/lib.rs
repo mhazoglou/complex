@@ -106,21 +106,184 @@ where
 
 /// Implements several common functions for complex and hypercomplex types.
 pub trait Functions<U, V> {
-    /// Returns the exponent of a number.
+    /// Returns the exponent of a hypercomplex number.
+    /// 
+    /// # Example
+    ///
+    /// ```
+    /// use complex::*;
+    /// use std::f64::consts::PI;
+    /// 
+    /// let z = complex![0.0, PI];
+    /// let expz = z.exp();
+    ///
+    /// assert_eq!(expz, complex![PI.cos(), PI.sin()]) 
+    /// ```
     fn exp(&self) -> Self;
-    /// Returns the natural logarithm of a number.
+    /// Returns the natural logarithm of a hypercomplex number. It's unique
+    /// up to integer multiples of 2π times some imaginary.
+    /// 
+    /// # Example
+    ///
+    /// ```
+    /// use complex::*;
+    /// use std::f64::consts::PI;
+    /// 
+    /// let z = complex![-1.0, 0.0];
+    /// let lnz = z.ln();
+    ///
+    /// assert!((lnz - complex![0.0, 0.0]).abs_sq() < 1e-10) 
+    /// ```
     fn ln(&self) -> Self;
-    /// Calculate a complex number to the power of a floating point.
+    /// Calculate a hypercomplex number to the power of a floating point.
+    /// 
+    /// # Example
+    ///
+    /// ```
+    /// use complex::*;
+    /// 
+    /// let z = complex![0.0, 1.0];
+    /// let w = z.powf(3.0);
+    ///
+    /// assert!((w - complex![0.0, -1.0]).abs_sq() < 1e-10) 
+    /// ```
     fn powf(&self, num: U) -> Self;
+    /// Calculate a hypercomplex number or float to power of a hypercomplex number.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    /// use std::f64::consts::PI;
+    /// 
+    /// let z = complex![0.0, 1.0];
+    /// let w = z.powz(z);
+    /// 
+    /// assert_eq!(w, (-PI / 2.).exp() * Complex::<f64>::one())
+    /// ```
     fn powz(&self, num: V) -> V;
+    /// Tail recursive function for calculating repeated products of hypercomplex numbers.
+    /// 
+    /// # Example
+    ///
+    /// ```
+    /// use complex::*;
+    /// 
+    /// let z = complex![0.0, 1.0];
+    /// let w = z.powu_tail(3, Complex::<f64>::one());
+    ///
+    /// assert_eq!(w, complex![0.0, -1.0]) 
+    /// ```
     fn powu_tail(&self, num: u32, acc: Self) -> Self;
+    /// Calculates the power of a hypercomplex number to a power of an unsigned integer.
+    /// 
+    /// # Example
+    ///
+    /// ```
+    /// use complex::*;
+    /// 
+    /// let z = complex![0.0, 1.0];
+    /// let w = z.powu(3);
+    ///
+    /// assert_eq!(w, complex![0.0, -1.0]) 
+    /// ```
     fn powu(&self, num: u32) -> Self;
+    /// Calculates the power of a hypercomplex number to a power of an signed integer.
+    /// 
+    /// # Example
+    ///
+    /// ```
+    /// use complex::*;
+    /// 
+    /// let z = complex![0.0, 1.0];
+    /// let w = z.powi(-3);
+    ///
+    /// assert_eq!(w, complex![0.0, 1.0]) 
+    /// ```
     fn powi(&self, num: i32) -> Self;
+    /// Returns the hyperbolic sine of a hypercomplex number.
+    ///
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    /// use std::f64::consts::PI;
+    /// 
+    /// let z = complex![0., PI];
+    /// let w = z.sinh();
+    /// 
+    /// assert_eq!(w, Complex::<f64>::i() * PI.sin())
+    /// ```
     fn sinh(&self) -> Self;
+    /// Returns the hyperbolic cosine of a hypercomplex number.
+    ///
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    /// use std::f64::consts::PI;
+    /// 
+    /// let z = complex![0., PI];
+    /// let w = z.cosh();
+    /// 
+    /// assert_eq!(w, Complex::<f64>::one() * PI.cos())
+    /// ```
     fn cosh(&self) -> Self;
+    /// Returns the hyperbolic tangent of a hypercomplex number.
+    ///
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    /// use std::f64::consts::PI;
+    /// 
+    /// let z = complex![0., PI];
+    /// let w = z.tanh();
+    /// 
+    /// assert!((w - Complex::<f64>::i() * PI.tan()).abs_sq() < 1e-10)
+    /// ```
     fn tanh(&self) -> Self;
+    /// Returns the sine of a hypercomplex number.
+    ///
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    /// use std::f64::consts::PI;
+    /// 
+    /// let z = complex![0., PI];
+    /// let w = z.sin();
+    /// 
+    /// assert!((w - Complex::<f64>::i() * PI.sinh()).abs_sq() < 1e-10)
+    /// ```
     fn sin(&self) -> Self;
+    /// Returns the cosine of a hypercomplex number.
+    ///
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    /// use std::f64::consts::PI;
+    /// 
+    /// let z = complex![0., PI];
+    /// let w = z.cos();
+    /// 
+    /// assert!((w - Complex::<f64>::one() * PI.cosh()).abs_sq() < 1e-10)
+    /// ```
     fn cos(&self) -> Self;
+    /// Returns the tangent of a hypercomplex number.
+    ///
+    /// # Example
+    /// 
+    /// ```
+    /// use complex::*;
+    /// use std::f64::consts::PI;
+    /// 
+    /// let z = complex![0., PI];
+    /// let w = z.tan();
+    /// 
+    /// assert!((w - Complex::<f64>::i() * PI.tanh()).abs_sq() < 1e-10)
+    /// ```
     fn tan(&self) -> Self;
 }
 
@@ -232,14 +395,15 @@ macro_rules! impl_functions_for_float {
                     let normed = *self / r;
                     let real = normed.real();
                     let imag = normed - real;
+                    let imag_mag = imag.abs_sq().sqrt();
                     let theta = real.acos();
-                    let sin_theta = theta.sin();
+                    // let sin_theta = theta.sin();
                     let imag_exp: Self;
 
-                    if sin_theta == 0. {
+                    if imag_mag == 0. {
                         imag_exp = Self::zero();
                     } else {
-                        imag_exp = theta * imag / sin_theta;
+                        imag_exp = theta * imag / imag_mag;
                     }
 
                     r.ln() + imag_exp
@@ -457,6 +621,7 @@ where
     }
 }
 
+/// Generates imaginaries i, j, k for respective hypercomplex type
 pub trait ImaginaryConstants {
     fn i() -> Self;
     fn j() -> Self;
