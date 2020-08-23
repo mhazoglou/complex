@@ -13,8 +13,7 @@ fn main() {
     let z_star = z.conj();
     let v = vec![z; 3];
     let vec = vec![
-        1., 2., 3., 4., 5., 6., 7., 8., 
-        1., 2., 3., 4., 5., 6., 7., 8.,
+        1., 2., 3., 4., 5., 6., 7., 8., 1., 2., 3., 4., 5., 6., 7., 8.,
     ];
     let sede = Sedenionf64::from_slice(&vec[..]);
     let sede2 = Sedenionf64::from_vec(vec);
@@ -79,21 +78,16 @@ fn main() {
     // if the number of values is a power of 2
     let z_z_top = complex![-1.0_f64, -5_f64];
     println!("{}", z_z_top);
-    let quaternion = complex![
-        1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64
-    ];
+    let quaternion = complex![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64];
     println!("{}", quaternion);
-    let octonion = complex![
-        1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 
-        5.0_f64, 6.0_f64, 7.0_f64, 8.0_f64
-    ];
+    let octonion = complex![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64, 6.0_f64, 7.0_f64, 8.0_f64];
     println!("{}", octonion);
     let polar_octo = octonion.ln();
     println!("Logarithm");
     println!("{}", polar_octo);
     println!("exp(polar_octo)");
     println!("{}", polar_octo.exp());
-    
+
     let poop = Sedenionf64::i();
     println!("IMAGINARIES YEAH: {}", poop);
 }

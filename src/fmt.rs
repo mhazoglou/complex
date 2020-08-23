@@ -1,4 +1,4 @@
-//! Includes implementions of string conversion, printing and parsing 
+//! Includes implementions of string conversion, printing and parsing
 //! for complex and hypercomplex types.
 use crate::*;
 use regex::Regex;

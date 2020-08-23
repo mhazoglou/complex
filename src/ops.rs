@@ -180,9 +180,9 @@ where
     }
 }
 
-mod inv_real{
+mod inv_real {
     use super::*;
-    
+
     pub trait InvReal {
         fn inv_real(&self) -> Self;
     }
@@ -229,8 +229,11 @@ where
 forward_ref_bin_op!(Rem, rem, Complex<T>, Complex<T>, T);
 impl<T> Rem for Complex<T>
 where
-    Complex<T>: Rounding + Mul<Output = Complex<T>> + 
-        Div<Output = Complex<T>> + Sub<Output = Complex<T>> + Copy,
+    Complex<T>: Rounding
+        + Mul<Output = Complex<T>>
+        + Div<Output = Complex<T>>
+        + Sub<Output = Complex<T>>
+        + Copy,
 {
     type Output = Self;
     fn rem(self, other: Self) -> Self::Output {
@@ -398,12 +401,12 @@ macro_rules! impl_algebra_with_reals {
                     other.conj() * (self / other.abs_sq())
                 }
             }
-            
+
             impl<T> Rem<Complex<T>> for $ty
             where
-                Complex<T>: Rounding + Mul<Output = Complex<T>> 
+                Complex<T>: Rounding + Mul<Output = Complex<T>>
                     + Copy,
-                $ty: Sub<Complex<T>, Output = Complex<T>> + 
+                $ty: Sub<Complex<T>, Output = Complex<T>> +
                     Div<Complex<T>, Output = Complex<T>> + Copy
             {
                 type Output = Complex<T>;
@@ -411,11 +414,11 @@ macro_rules! impl_algebra_with_reals {
                     self - other * (self / other).trunc()
                 }
             }
-            
+
             impl<T> Rem<$ty> for Complex<T>
             where
                 Complex<T>: Rounding
-                    + Sub<Output = Complex<T>> + 
+                    + Sub<Output = Complex<T>> +
                     Div<$ty, Output = Complex<T>> + Copy,
                 $ty: Mul<Complex<T>, Output = Complex<T>> + Copy
             {
